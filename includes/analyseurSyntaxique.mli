@@ -1,0 +1,4 @@
+module AnalyseurSyntaxique :
+  sig
+
+end

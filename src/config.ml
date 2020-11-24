@@ -1,0 +1,4 @@
+module Config =
+  struct
+
+end

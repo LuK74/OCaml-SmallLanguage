@@ -1,0 +1,4 @@
+module AnalyseurSyntaxique =
+  struct
+
+end
