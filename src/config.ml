@@ -35,13 +35,28 @@ module Config =
 
     let rec execute_aux = fun i ->
       fun s ->
-      let Config(newInstr, newState) = one_step i s in
-      (match newInstr with
-      | Skip -> newState
-      | _ -> execute_aux newInstr newState)
+      fun flag ->
+      if (flag = 1) then
+        (print_string "(debug) ";
+         let user_input = read_line() in
+         if (String.equal user_input "continue") then execute_aux i s 0
+         else (if (String.equal user_input "print") then (let _ = S.print_state s in execute_aux i s flag)
+         else (if (String.equal user_input "next") then  
+         (let Config(newInstr, newState) = one_step i s in
+          (match newInstr with
+           | Skip -> newState
+           | _ -> execute_aux newInstr newState flag))
+               else execute_aux i s flag)))
+    else (let Config(newInstr, newState) = one_step i s in
+          (match newInstr with
+           | Skip -> newState
+           | _ -> execute_aux newInstr newState flag))
     
     let execute = fun instrInit ->
-      execute_aux instrInit (S.create_state)
+      print_string "Would you like to use debugger ? (Y/N) \n";
+      let user_input = read_line () in
+      let flag = if (String.equal user_input "Y") then 1 else 0 in
+      execute_aux instrInit (S.create_state) flag
                                    
 
 end
@@ -90,3 +105,6 @@ let str5 = "a :=1 ;
                           }
             }\n"
 let res5 = automatedTest str5
+
+let str6 = "a := #; if (a) { c := 1 } else { d := 1 }"
+let res6 = automatedTest str6
