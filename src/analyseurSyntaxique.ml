@@ -11,6 +11,30 @@ module AnalyseurSyntaxique =
           | Seq of instr * instr
           | Skip
 
+  let print_var = fun v ->
+    print_char v
+
+  let print_const = fun c ->
+    print_int c
+
+  let print_exp = fun e ->
+    match e with
+    | Var(k) -> print_var k
+    | Const(n) -> print_const n
+
+  let print_ope = fun o ->
+    match o with
+    | Exp(exp1) -> print_exp exp1
+    | Hash -> print_char '#'
+
+  let rec print_instr = fun i ->
+    match i with
+    | Skip -> print_string "(seq_end)\n"
+    | Assign(v,o) -> print_var v; print_string " := "; print_ope o; print_string "\n"
+    | If(bexp, i1, i2) -> print_string " if("; print_exp bexp; print_string ") \n"
+    | While(bexp, i1) -> print_string " while("; print_exp bexp; print_string ") \n"
+    | Seq(i1, i2) -> print_instr i1
+
   type 'a mylist = unit -> 'a contentsll
   and 'a contentsll = Nil | Cons of 'a * 'a mylist
 

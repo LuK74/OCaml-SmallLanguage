@@ -7,6 +7,8 @@ sig
   type ope
   type instr
 
+  val print_instr : instr
+
   (* Type utilisé pour l'analyse syntaxique *)
   exception Echec
   type 'a mylist

@@ -37,7 +37,8 @@ module Config =
       fun s ->
       fun flag ->
       if (flag = 1) then
-        (print_string "(debug) ";
+        (A.print_instr i;
+        print_string "(debug) ";
          let user_input = read_line() in
          if (String.equal user_input "continue") then execute_aux i s 0
          else (if (String.equal user_input "print") then (let _ = S.print_state s in execute_aux i s flag)
@@ -64,9 +65,10 @@ end
 module C = Config
 
 let automatedTest = fun s ->
-  print_string "Execution starts : \n";
+  print_string "Execution starts \n";
   print_string "Prog : \n";
   print_string s;
+  print_string "\n";
   print_string "\n";
   let ch1 = A.list_of_string s in
   let res1 = A.ast_parser_func ch1 in
