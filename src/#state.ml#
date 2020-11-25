@@ -52,14 +52,7 @@ module State =
                                  | Exp(A.Var(k)) -> modify_var c (read_var k s) s
                                  | Exp(A.Const(k)) -> modify_var c k s)
       | _ -> raise InstrNotAssign
-
-
-    let rec print_state = fun s ->
-      match s with
-      | State(id0, value, suite) ->
-         print_char id0; print_string " : "; print_int value;
-         print_string " | "; print_state suite
-      | EOS -> print_string " End Of State \n"; s
+      
    
 
 end

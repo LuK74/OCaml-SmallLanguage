@@ -14,6 +14,8 @@ sig
   val read_var : char -> state -> int
   val modify_var : char -> int -> state -> state
   val exec_affec : A.instr -> state -> state
+
+  val print_state : state
   
   
 end
