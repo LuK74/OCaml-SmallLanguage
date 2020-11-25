@@ -22,7 +22,7 @@ To execute :
     bin/analyser
 ```
 
-Test prog in src/config.ml   
+Test prog are in src/config.ml 
 How to use "automatedTest" :  
 ```ocaml
     (* string corresponding to the prog *)
@@ -32,8 +32,8 @@ How to use "automatedTest" :
 ```
 
 How to use the debugger :
-```bash
-    (debug) next #Execute one step
-    (debug) print #Print the current state (value of variables during execution)
-    (debug) continue #Continue until the end of the program
-````
+```
+    (debug) next  #Execute one step
+    (debug) print  #Print the current state (value of variables during execution)
+    (debug) continue  #Continue until the end of the program
+```
