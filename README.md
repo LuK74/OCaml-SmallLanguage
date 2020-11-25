@@ -30,3 +30,10 @@ How to use "automatedTest" :
     (* just call automatedTest, it will return the final state, but also print it *)
     let _ = automatedTest str1
 ```
+
+How to use the debugger :
+```bash
+    (debug) next #Execute one step
+    (debug) print #Print the current state (value of variables during execution)
+    (debug) continue #Continue until the end of the program
+````
