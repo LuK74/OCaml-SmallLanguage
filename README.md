@@ -21,3 +21,12 @@ To execute :
 ```bash
     bin/analyser
 ```
+
+Test prog in src/config.ml   
+How to use "automatedTest" :  
+```ocaml
+    (* string corresponding to the prog *)
+    let str1 = "while(a){a:=0;while(b){b:=0;while(c){c:=0;while(d){d:=0}}}}"
+    (* just call automatedTest, it will return the final state, but also print it *)
+    let _ = automatedTest str1
+```

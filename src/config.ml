@@ -48,33 +48,45 @@ end
 
 module C = Config
 
-  
-let _ = print_string "Parser starts\n"
-let _ = print_string "ch1 \n"
-let ch1 = A.list_of_string "a:=1;b:=1;c:=1;while(a){if(c){c:=0;a:=b}{b:=0;c:=a}}"
-(* a = 0, b = 0, c = 0 *)
-let res1 = A.ast_parser_func ch1
-let res1 = C.execute res1
-let res1 = S.print_state res1
+let automatedTest = fun s ->
+  print_string "Execution starts : \n";
+  print_string "Prog : \n";
+  print_string s;
+  print_string "\n";
+  let ch1 = A.list_of_string s in
+  let res1 = A.ast_parser_func ch1 in
+  let state1 = C.execute res1 in
+  let state1 = S.print_state state1 in state1
+     
 
-(* met toutes les var à 1 *)
-let _ = print_string "ch2 \n"
-let ch2 = A.list_of_string "a:=1;b:=1;c:=1;d:=1"
-let res2 = A.ast_parser_func ch2
-let res2 = C.execute res2
-let res2 = S.print_state res2
+let str0 = " if(c) 
+             {a:=1} 
+             else 
+             {b:=1} "
+let res0 = automatedTest str0
 
-(* passes tout à 0 (*test des while *) *)
-let _ = print_string "ch3 \n"
-let ch3 = A.list_of_string"while(a){a:=0;while(b){b:=0;while(c){c:=0;while(d){d:=0}}}}"
-let res3 = A.ast_parser_func ch3
-let res3 = C.execute res3
-let res3 = S.print_state res3
+let str1 = "a:=1; b:=1; c:=1;while(a){if(c){c:=0;a:=b}else{b:=0;c:=a}}"
+let res1 = automatedTest str1
 
-(* si a = 1, c = 0 sinon c = 1, et si b = 1, d = 1 sinon d = 0*)
-let _ = print_string "ch4 \n"
-let ch4 = A.list_of_string"if(a){c:=0}{c:=1};if(b){d:=1}{d:=0}"
-let res4 = A.ast_parser_func ch4
-let res4 = C.execute res4
-let res4 = S.print_state res4
+let str2 = "a:=1;b:=1;c:=1;d:=1"
+let res2 = automatedTest str2
 
+let str3 = "while(a){a:=0;while(b){b:=0;while(c){c:=0;while(d){d:=0}}}}"
+let res3 = automatedTest str3
+
+let str4 = "if(a){c:=0}else{c:=1};if(b){d:=1}else{d:=0}"
+let res4 = automatedTest str4
+
+let str5 = "a :=1 ;
+                      b :=1 ;
+                      c :=1 ;
+                      while(a) {
+                          if(c) {
+                            c := 0 ;
+                            a := b
+                          } else {
+                            b := 0 ;
+                            c := a
+                          }
+            }\n"
+let res5 = automatedTest str5

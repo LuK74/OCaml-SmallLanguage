@@ -29,21 +29,27 @@ module AnalyseurSyntaxique =
   let (+|) (a : ('x ,'t) st) (b : ('x ,'t) st) : ('x, 't) st =
   fun l -> try a l with (Echec (s1,l1)) -> b l
 
-  
 
-  let terminal c : (char) analist = fun l ->
+  let rec consumeBlank : (char) analist = fun l ->
     match l() with
-    | Cons(' ', l1) -> l1
-    | Cons('\n', l1) -> l1
-    | Cons('\t', l1) -> l1
+    | Cons(' ', l1) -> consumeBlank l1
+    | Cons('\n', l1) -> consumeBlank l1
+    | Cons('\t', l1) -> consumeBlank l1
+    | _ -> l
+
+  let rec terminal c : (char) analist = fun l ->
+    let newList = consumeBlank l in
+    match newList() with
     | Cons(x,l1) when x = c -> l1
     | _ -> raise (Echec ("Terminal attendu ", l))
 
   let return : 'r -> ('r, 't) ranalist =
-    fun x l -> (x, l)
+    fun x l -> let newList = consumeBlank l in
+               (x, newList)
 
   let p_V : (var, char) ranalist = fun l ->
-    match l() with
+    let newList = consumeBlank l in
+    match newList() with
     | Cons('a', l1) -> ('a',l1)
     | Cons('b', l1) -> ('b',l1)
     | Cons('c', l1) -> ('c',l1)
@@ -52,14 +58,16 @@ module AnalyseurSyntaxique =
 
 
   let p_C : (const, char) ranalist = fun l ->
-    match l() with
+    let newList = consumeBlank l in
+    match newList() with
     | Cons('0', l1) -> (0,l1)
     | Cons('1', l1) -> (1,l1)
     | _ -> raise (Echec ("Const attendu, 0 ou 1 ", l))
 
 
   let p_E : (exp, char) ranalist = fun l ->
-    match l() with
+    let newList = consumeBlank l in
+    match newList() with
     | Cons('a', l1) -> let (var,suite) = p_V l in ((Var(var),suite))
     | Cons('b', l1) -> let (var,suite) = p_V l in ((Var(var),suite))
     | Cons('c', l1) -> let (var,suite) = p_V l in ((Var(var),suite))
@@ -69,7 +77,8 @@ module AnalyseurSyntaxique =
     | _ -> raise (Echec ("Exp attendu ", l))
 
   let p_O : (ope, char) ranalist = fun l ->
-    match l() with
+    let newList = consumeBlank l in
+    match newList() with
     | Cons('#', l1) -> ((Hash, l1))
     | _ -> let (exp, l1) = p_E l in (Exp(exp),l1)
 
@@ -77,10 +86,10 @@ module AnalyseurSyntaxique =
   let rec p_While c : (char) analist = fun l ->
     match l() with
     | Cons(k, suite) when k = c -> if (c = 'w') then (p_While 'h' suite)
-                                   else (if c = 'h' then (p_While 'i' suite)
-                                         else (if c = 'i' then (p_While 'l' suite)
-                                               else (if c = 'l' then (p_While 'e' suite)
-                                                     else (if c = 'e' then suite
+                                   else (if (c = 'h') then (p_While 'i' suite)
+                                         else (if (c = 'i') then (p_While 'l' suite)
+                                               else (if (c = 'l') then (p_While 'e' suite)
+                                                     else (if (c = 'e') then suite
                                                            else raise (Echec ("Not a while ", l))))))
     | _ -> raise (Echec ("While attendu ", l))
 
@@ -90,6 +99,28 @@ module AnalyseurSyntaxique =
                                    else (if (c = 'f') then suite
                                          else raise (Echec ("Not a if ", l)))
     | _ -> raise (Echec ("If attendu ", l))
+
+   let rec p_Else c : (char) analist = fun l ->
+    match l() with
+    | Cons(k, suite) when k = c -> if (c = 'e') then (p_Else 'l' suite)
+                                   else (if (c = 'l') then (p_Else 's' suite)
+                                         else (if (c = 's') then (p_Else 'e' suite)
+                                               else (if (c = 'e') then suite
+                                                           else raise (Echec ("Not a else ", l)))))
+    | _ -> raise (Echec ("Else attendu ", l))
+
+   let rec p_String s : (char) analist = fun l ->
+     let newList = consumeBlank l in (
+     let rec consumeString s = fun l ->
+     match l() with
+     | Cons(k,suite) -> if (String.length s > 0)
+                        then (if (k = s.[0]) then
+                                p_String (String.sub s 1 ((String.length s) - 1)) suite
+                              else raise (Echec (("Not string expected"), l)))
+                        else l
+     | _ -> if (String.length s <= 0) then l else raise (Echec (("Not string expected"), l))
+   in consumeString s newList)
+
 
   let rec p_S : (instr, char) ranalist = fun l ->
     l |>
@@ -101,13 +132,13 @@ module AnalyseurSyntaxique =
       +| return Skip
   and p_I : (instr, char) ranalist = fun l ->
     l |>
-      (p_If 'i' +> terminal '(' +> p_E ++>
+      (p_String "if" +> terminal '(' +> p_E ++>
          fun a -> terminal ')' +> terminal '{' +> p_S ++>
-                    fun b -> terminal '}' +> terminal '{' +>
+                    fun b -> terminal '}' +> p_String "else" +> terminal '{' +>
                                p_S ++> fun c -> terminal '}' +>
                                                   return (If(a,b,c)))
       +|
-        (p_While 'w' +> terminal '(' +> p_E ++>
+        (p_String "while" +> terminal '(' +> p_E ++>
            fun a -> terminal ')' +> terminal '{' +> p_S ++>
                       fun b -> terminal '}' +> return (While(a,b)))
       +|
