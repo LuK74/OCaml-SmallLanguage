@@ -114,6 +114,7 @@ struct
     | Cons(c, suite) -> generate_substring suite (String.concat "" ([s]@[(String.make 1 c)]))
     | Nil -> (s, list)
 
+
   let generate_subtoken = fun list ->
     match list() with
     | Cons(c, suite) -> if (isNumb c) then (generate_subvalue list "")

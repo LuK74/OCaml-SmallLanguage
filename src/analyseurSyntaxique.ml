@@ -38,16 +38,17 @@ module AnalyseurSyntaxique =
 
     let print_ope = fun o ->
       match o with
-      | _ -> print_string "Not yet implemented, print_ope\n"
+      | AExp(ae1) -> Ar.printAExp ae1
+      | BExp(be1) -> Bo.printBExp be1
       | Hash -> print_char '#'
 
-    (*let rec print_instr = fun i ->
+    let rec print_instr = fun i ->
       match i with
       | Skip -> print_string "(seq_end)\n"
-      | Assign(v,o) -> print_var v; print_string " := "; print_ope o; print_string "\n"
-      | If(bexp, i1, i2) -> print_string " if("; print_exp bexp; print_string ") \n"
-      | While(bexp, i1) -> print_string " while("; print_exp bexp; print_string ") \n"
-      | Seq(i1, i2) -> print_instr i1*)
+      | Assign(v,o) -> print_string v; print_string " := "; print_ope o; print_string "\n"
+      | If(bexp, i1, i2) -> print_string " if("; print_ope bexp; print_string ") \n"
+      | While(bexp, i1) -> print_string " while("; print_ope bexp; print_string ") \n"
+      | Seq(i1, i2) -> print_instr i1
 
     exception Echec of string * (AL.token AL.mylist)
 
@@ -96,13 +97,12 @@ module AnalyseurSyntaxique =
       | _ -> raise (Echec ("Exp attendu ", l))
 
     (* ameliorable *)
-    exception TypeError
     (* recursive à gauche , on commence par les constantes et var pour éviter récursion infini*)
     let rec p_AExp : (Ar.aExp, AL.token) ranalist = fun l ->
       l |>
         (p_C ++> fun a -> (match a with
                           | ConstENT(k) -> return (Ar.CoENT(k))
-                          | _ -> raise TypeError))
+                          | _ -> raise (Echec ("INT requested\n", l))))
         +|
           (p_V ++> fun a -> return (Ar.VaENT(a)))
         +|
@@ -120,7 +120,7 @@ module AnalyseurSyntaxique =
       l |>
         (p_C ++> fun a -> (match a with
                            | ConstBOOL(k) -> return (Bo.CoB(k))
-                           | _ -> raise TypeError))
+                           | _ -> raise (Echec ("BOOL requested\n", l))))
         +|
           (p_V ++> fun a -> return (Bo.VaB(a)))
         +|
@@ -128,8 +128,9 @@ module AnalyseurSyntaxique =
 
 
     let p_Op : (ope, AL.token) ranalist = fun l ->
-      l |> (p_AExp ++> fun a -> return (AExp(a)))
-           +| (p_BExp ++> fun b -> return (BExp(b)))
+      l |>
+        (p_AExp ++> fun a -> return (AExp(a)))
+        +| (p_BExp ++> fun b -> return (BExp(b)))
     (* +| terminal AL.THash +> return(Hash)*)
 
 

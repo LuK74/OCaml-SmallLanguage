@@ -48,14 +48,17 @@ module Config =
                             | A.BExp(bexp) -> (let resultB = Bo.evalBExp bexp s1 in
                                                (if (resultB = true) then Config(i1, s1)
                                                else Config(i2,s1)))
-                            | _ -> (raise (StepError s1))))
+                            | A.AExp(aexp) -> (let resultA = Ar.evalAExp aexp s1 in
+                                               (if (resultA = 0) then Config(i2,s1)
+                                                else Config(i1,s1)))
+                            | _ -> raise (StepError s1)))
     with S.VarNotFound(ch, st) -> print_string "Looking for "; print_string ch; print_string " on state : "; let res = S.print_state st in (raise (StepError res))
 
     let rec execute_aux = fun i ->
       fun s ->
       fun flag ->
       if (flag = 1) then
-        ((*A.print_instr i;*)
+        (A.print_instr i;
         print_string "(debug) ";
          let user_input = read_line() in
          if (String.equal user_input "continue") then execute_aux i s 0
@@ -111,7 +114,7 @@ let res0 = automatedTest str0
 let str1 = "a:=1; b:=1; c:=1;while(a){if(c){c:=0;a:=b}else{b:=0;c:=a}}"
 let res1 = automatedTest str1*)
 
-let str2 = "a:=1;b:=1;c:=1;d:=1;a:=b + d"
+let str2 = "w:=true;a:=1;b:=1;c:=1;d:=1"
 let res2 = automatedTest str2
 
 let str3 = "a:=1;b:=1;if(b = a) { b := 2 } else { a := 2}"

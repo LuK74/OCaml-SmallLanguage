@@ -16,6 +16,15 @@ module BoolExp =
 
     exception TypeError
 
+     let rec printBExp = fun b1 ->
+      match b1 with
+      | CoB (k) -> if (k = true) then print_string "true" else print_string "else"
+      | VaB (k) -> print_string k
+      | OrB (b1, b2) -> printBExp b1; print_string "||"; printBExp b2
+      | AndB (b1, b2) -> printBExp b1; print_string "&&"; printBExp b2
+      | NegB (b1) -> print_char '!';printBExp b1
+      | EqualB (aENT1, aENT2) -> Ar.printAExp aENT1; print_char '='; Ar.printAExp aENT2
+
     let rec evalBExp = fun b1 ->
       fun s1 ->
       match b1 with

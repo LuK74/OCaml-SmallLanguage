@@ -16,6 +16,16 @@ module ArithExp =
 
     exception TypeError
 
+    let rec printAExp = fun a1 ->
+      match a1 with
+      | CoENT (k) -> print_int k
+      | VaENT (k) -> print_string k
+      | AplENT (a1 , a2) -> printAExp a1; print_char '+'; printAExp a2
+      | AmuENT (a1 , a2) -> printAExp a1; print_char '*'; printAExp a2
+      | AmiENT (a1 , a2) -> printAExp a1; print_char '-'; printAExp a2
+      | AdiENT (a1 , a2) -> printAExp a1; print_char '/'; printAExp a2
+      | AmoENT (a1 , a2) -> printAExp a1; print_char '%'; printAExp a2
+
     let rec evalAExp = fun a1 ->
       fun s1 ->
       match a1 with
