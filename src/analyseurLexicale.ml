@@ -12,6 +12,7 @@ struct
     | TAccfer
     | TAffec
     | TEgale
+    | TNegat
     | TPlus
     | TMinus
     | TMultiply
@@ -39,6 +40,7 @@ struct
     | TAccfer -> print_string "}"; t
     | TAffec -> print_string ":="; t
     | TEgale -> print_string "="; t
+    | TNegat -> print_string "!"; t
     | TPlus -> print_string "+"; t
     | TMinus -> print_string "-"; t
     | TMultiply -> print_string "*"; t
@@ -62,43 +64,82 @@ struct
     | Cons('\t', l1) -> consumeBlank l1
     | _ -> l
 
+
+  let isNumb = fun c ->
+    let charCode = Char.code c in
+    if (charCode > Char.code '9') then false
+    else ((if (charCode < Char.code '0') then false
+          else true))
+
+  let rec generate_subvalue = fun list ->
+    fun s ->
+    match list() with
+    | Cons('.', suite) -> if (String.contains s '.') then (s, list)
+                          else generate_subvalue suite (String.concat "" ([s]@[(String.make 1 '.')]))
+    | Cons(c, suite) -> if (isNumb c) then generate_subvalue suite (String.concat "" ([s]@[(String.make 1 c)]))
+                        else (s, list)
+    | _ -> (s, list)
+
+  let isChar = fun c ->
+    let charCode = Char.code c in
+    if (charCode > Char.code 'z') then false
+    else (if (charCode >= Char.code 'a') then true
+          else (if (charCode > Char.code 'Z') then false
+                else (if (charCode >= Char.code 'A') then true
+                      else false)))
+  
+  let rec generate_subword = fun list ->
+    fun s ->
+    match list() with
+    | Cons(c, suite) ->  if (isChar c) then generate_subword suite (String.concat "" ([s]@[(String.make 1 c)]))
+                         else (s,list)
+    | Nil -> (s, list)
+    
+
   let rec generate_substring = fun list ->
     fun s ->
     match list() with
     | Cons(' ', l1) -> (s, list)
     | Cons('\n', l1) -> (s, list)
     | Cons('\t', l1) -> (s, list)
+    | Cons('(' , l1) -> if (String.length s > 0) then (s, list) else ("(", l1)
+    | Cons(')', l1) -> if (String.length s > 0) then (s, list) else (")", l1)
+    | Cons('{', l1) -> if (String.length s > 0) then (s, list) else ("{", l1)
+    | Cons('}', l1) -> if (String.length s > 0) then (s, list) else ("}", l1)
+    | Cons('!', l1) -> if (String.length s > 0) then (s, list) else ("!", l1)
+    | Cons('=', l1) -> if (String.length s > 0) then (if (String.get s 0 = ':') then (":=", l1)
+                                                     else (s, list))
+                       else ("=", l1)
     | Cons(';', l1) -> if (String.length s > 0) then (s, list) else (";", l1)
-    | Cons(':', l1) when (String.length s > 0) -> (s, list)
     | Cons(c, suite) -> generate_substring suite (String.concat "" ([s]@[(String.make 1 c)]))
     | Nil -> (s, list)
 
+  let generate_subtoken = fun list ->
+    match list() with
+    | Cons(c, suite) -> if (isNumb c) then (generate_subvalue list "")
+                        else (if (isChar c) then (generate_subword list "")
+                              else (generate_substring list ""))
+    | Nil -> ("", list)
+  
   exception NotEntValue of string
 
   let rec create_valueENT = fun tokenStr ->
     fun value ->
     if (String.length tokenStr > 0) then
       (let c = String.get tokenStr 0 in
-      let charCode = Char.code c in
-      if (charCode > (Char.code '9')) then raise (NotEntValue tokenStr)
-      else (if (charCode < (Char.code '0')) then raise (NotEntValue tokenStr)
-            else (create_valueENT (String.sub tokenStr 1 ((String.length tokenStr) - 1 )) value * 10 + (charCode - (Char.code '0')))))
+       if (isNumb c) then (create_valueENT (String.sub tokenStr 1 ((String.length tokenStr) - 1 )) (value * 10 + (Char.code c - (Char.code '0'))))
+       else raise (NotEntValue tokenStr))
     else value
 
   let rec create_valueFLOAT = fun tokenStr ->
     fun value -> 0.0
 
-  exception WrongIdentifierSyntax
+  exception WrongIdentifierSyntax of string
   let rec checkIdentifier = fun tokenStr ->
     if (String.length tokenStr > 0) then
       (let c = String.get tokenStr 0 in
-       let charCode = Char.code c in
-       if (charCode > (Char.code 'z')) then
-         (if (charCode > (Char.code 'Z')) then raise WrongIdentifierSyntax
-          else (if (charCode < (Char.code 'A')) then raise WrongIdentifierSyntax
-                else (checkIdentifier (String.sub tokenStr 1 ((String.length tokenStr) - 1 )))))
-       else (if (charCode < Char.code 'a') then raise WrongIdentifierSyntax
-                else (String.sub tokenStr 1 ((String.length tokenStr) - 1 ))))
+       if (isChar c) then  (String.sub tokenStr 1 ((String.length tokenStr) - 1 ))
+       else raise (WrongIdentifierSyntax tokenStr))
     else tokenStr
 
   let create_token = fun tokenStr ->
@@ -117,7 +158,9 @@ struct
     | "{" -> TAccouv
     | "}" -> TAccfer
     | "=" -> TEgale
+    | "!" -> TNegat
     | "+" -> TPlus
+    | "*" -> TMultiply
     | "-" -> TMinus
     | "/" -> TDivide
     | "%" -> TModulo
@@ -127,30 +170,25 @@ struct
     | "True" -> ValueBOOL(true)
     | "False" -> ValueBOOL(false)
     | _ -> let c = String.get tokenStr 0 in
-           if (Char.code c <= Char.code '9') then (if (Char.code c >= Char.code '0') then
-                                                     (if (String.contains tokenStr '.') then
-                                                        ValueFLOAT(create_valueFLOAT tokenStr 0.0)
-                                                      else
-                                                        ValueENT(create_valueENT tokenStr 0))
-                                                   else
-                                                     (let testStr = checkIdentifier tokenStr in
-                                                      if (String.length testStr = 0) then
-                                                        Identifier(tokenStr)
-                                                      else
-                                                        raise WrongIdentifierSyntax))
-  
+           if (isNumb c) then (if (String.contains tokenStr '.') then
+                                 ValueFLOAT(create_valueFLOAT tokenStr 0.0)
+                               else
+                                 ValueENT(create_valueENT tokenStr 0))
            else (let testStr = checkIdentifier tokenStr in
                  if (String.length testStr = 0) then
                    Identifier(tokenStr)
                  else
-                   raise WrongIdentifierSyntax)
+                   raise (WrongIdentifierSyntax tokenStr))
+  
 
 
   let rec token_generator = fun list ->
     let newList = consumeBlank list in
-    let (substr, next) = generate_substring newList "" in  
-    (fun () -> Cons(create_token substr, token_generator next)) 
+    let (substr, next) = generate_subtoken newList in
+    if (next() = Nil) then (fun () -> Cons(create_token substr,fun () -> Nil))
+    else (fun () -> Cons(create_token substr, token_generator next)) 
 
+  
 
    let list_of_string s =
     let rec boucle s i n = fun () ->
@@ -158,12 +196,13 @@ struct
     in boucle s 0 (String.length s)
   
 end
-
+(*
 module AL = AnalyseurLexicale
 
-let prog = "a := 1; b:= 2; c := 3; d := 4"
+let prog = "a:=1;b:=1;c:=1;d:=1;a:=b + d"
 let l1 = AL.list_of_string prog
 let t1 = AL.token_generator l1
 let _ = print_string "Token list : \n"
 let r1 = AL.print_token_list t1
 let _ = print_string "\n"
+ *)

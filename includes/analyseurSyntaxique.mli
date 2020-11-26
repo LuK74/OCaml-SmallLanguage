@@ -1,3 +1,11 @@
+open AnalyseurLexicale
+open BoolExp
+open ArithExp
+
+module AL = AnalyseurLexicale
+module Bo = BoolExp
+module Ar = ArithExp
+
 module AnalyseurSyntaxique :
 sig
   (* Type utilisé pour les token de l'AST *)
@@ -26,7 +34,6 @@ sig
   val p_V : (var, 't) ranalist
   val p_C : (const, 't) ranalist
   val p_E : (exp ,'t) ranalist
-  val p_O : (ope, 't) ranalist
 
   val p_If : 't -> 't mylist -> 't mylist
   val p_While : 't -> 't mylist -> 't mylist
@@ -34,7 +41,10 @@ sig
   val p_S : (instr, 't) ranalist
   val p_L : (instr, 't) ranalist
   val p_I : (instr, 't) ranalist
+  val p_Op : (ope, 't) ranalist
 
+  val p_AExp : (Ar.aExp, 't) ranalist
+  val p_BExp : (Bo.boolExp, 't) ranalist
                         (* useful func for parsing *)
   val list_of_string : string -> 't mylist
   val ast_parser_func : 't mylist -> 'r

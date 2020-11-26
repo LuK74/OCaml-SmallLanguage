@@ -1,24 +1,24 @@
-open AnalyseurSyntaxique
-
-module A = AnalyseurSyntaxique
-
 module State =
   struct
     (* 'c identifier, 'a : value, state : suite du state *)
-        
+    type value =
+      | VEnt of int
+      | VFloat of float
+      | VBool of bool
+    
     type state =
       | EOS
-      | State of (char * int * state)
+      | State of (string * value * state)
 
     let create_state =
-      State('a', 0, State('b',0,State('c',0,State('d',0,EOS))))
+      EOS
 
     let rec init_state = fun s ->
       match s with
-      | State(id, value, suite) -> State(id, 0, (init_state suite))
+      | State(id, value, suite) -> State(id, VEnt(0), (init_state suite))
       | EOS -> s
 
-    exception VarNotFound of char * state
+    exception VarNotFound of string * state
     
     let rec read_var = fun id ->
       fun s ->
@@ -43,21 +43,17 @@ module State =
       | _ -> raise ComputeHashWentWrong
 
         exception InstrNotAssign
-    
-    let exec_affec = fun instr ->
-      fun s ->
-      match instr with
-      | A.Assign(c,ope) -> (match ope with
-                                 | Hash -> modify_var c ((computeHash) (read_var c s)) s
-                                 | Exp(A.Var(k)) -> modify_var c (read_var k s) s
-                                 | Exp(A.Const(k)) -> modify_var c k s)
-      | _ -> raise InstrNotAssign
 
-
+        let print_value = fun v ->
+          match v with
+          | VEnt(k) -> print_int k
+          | VFloat(k) -> print_float k
+          | VBool(k) -> if (k = true) then print_string "true" else print_string "false"
+        
     let rec print_state = fun s ->
       match s with
       | State(id0, value, suite) ->
-         print_char id0; print_string " : "; print_int value;
+         print_string id0; print_string " : "; print_value value;
          print_string " | "; print_state suite
       | EOS -> print_string " End Of State \n"; s
    
