@@ -7,7 +7,7 @@ MKDIR = mkdir
 CC = ocamlc
 FLAGS = -g
 
-all : directories analyser
+all : directories analyser lexical
 
 directories : $(OBJ_DIR) $(BIN_DIR)
 
@@ -21,6 +21,11 @@ analyser : $(OBJ_DIR)/analyseurSyntaxique.cmo $(OBJ_DIR)/state.cmo $(OBJ_DIR)/co
 	@echo "Compiling analyser\n"
 	$(CC) $^ -o $(BIN_DIR)/$@
 	
+lexical : $(OBJ_DIR)/analyseurLexical.cmo
+	@echo "Compiling lexical analyser\n"
+	$(CC) $^ -o $(BIN_DIR)/$@
+    
+	
 $(OBJ_DIR)/config.cmi : $(LIB_DIR)/config.mli $(OBJ_DIR)/state.cmi
 	$(CC) -c $(FLAGS) $< -I $(OBJ_DIR)/ -o $@
 	
@@ -30,6 +35,9 @@ $(OBJ_DIR)/state.cmi : $(LIB_DIR)/state.mli $(OBJ_DIR)/analyseurSyntaxique.cmi
 $(OBJ_DIR)/analyseurSyntaxique.cmi : $(LIB_DIR)/analyseurSyntaxique.mli
 	$(CC) -c $(FLAGS) $< -I $(OBJ_DIR)/ -o $@
 	
+$(OBJ_DIR)/analyseurLexicale.cmi : $(LIB_DIR)/analyseurLexicale.mli
+	$(CC) -c $(FLAGS) $< -I $(OBJ_DIR)/ -o $@
+	
 $(OBJ_DIR)/config.cmo : $(SRC_DIR)/config.ml $(OBJ_DIR)/config.cmi $(OBJ_DIR)/state.cmo
 	$(CC) -c $(FLAGS) $< -I $(OBJ_DIR)/ -o $@
 	
@@ -37,6 +45,9 @@ $(OBJ_DIR)/state.cmo : $(SRC_DIR)/state.ml $(OBJ_DIR)/state.cmi $(OBJ_DIR)/analy
 	$(CC) -c $(FLAGS) $< -I $(OBJ_DIR)/ -o $@
 
 $(OBJ_DIR)/analyseurSyntaxique.cmo : $(SRC_DIR)/analyseurSyntaxique.ml $(OBJ_DIR)/analyseurSyntaxique.cmi
+	$(CC) -c $(FLAGS) $< -I $(OBJ_DIR)/ -o $@
+
+$(OBJ_DIR)/analyseurLexical.cmo : $(SRC_DIR)/analyseurLexicale.ml $(OBJ_DIR)/analyseurLexicale.cmi
 	$(CC) -c $(FLAGS) $< -I $(OBJ_DIR)/ -o $@
 
 clean :
