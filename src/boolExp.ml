@@ -36,7 +36,7 @@ module BoolExp =
       | OrB (b1, b2) -> (evalBExp b1 s1 || evalBExp b2 s1)
       | AndB (b1, b2) -> (evalBExp b1 s1 && evalBExp b2 s1)
       | NegB (b1) -> if ((evalBExp b1 s1) = true) then true else false
-      | EqualB (aENT1, aENT2) -> if ((Ar.evalAExp aENT1) = (Ar.evalAExp aENT2)) then true
+      | EqualB (aENT1, aENT2) -> if ((Ar.evalAExp aENT1 s1) = (Ar.evalAExp aENT2 s1)) then true
                                     else false
 
   end

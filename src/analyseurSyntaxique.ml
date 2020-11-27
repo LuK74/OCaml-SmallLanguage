@@ -9,45 +9,31 @@ module Bo = BoolExp
 module AnalyseurSyntaxique =
   struct
     type var = string
-    type const = ConstENT of int | ConstFLOAT of float | ConstBOOL of bool
-    type exp = Var of var | Const of const
-    type ope = AExp of Ar.aExp | BExp of Bo.boolExp | Hash
+    type exp = Var of var | AExp of Ar.aExp | BExp of Bo.boolExp | Hash
 
-    type instr = Assign of var * ope
-               | If of ope * instr * instr
-               | While of ope * instr
+    type instr = Assign of var * exp
+               | If of exp * instr * instr
+               | While of exp * instr
                | Seq of instr * instr
                | Skip
 
     let print_var = fun v ->
-      match v with
-      | Var(s) -> print_string s
-      | _ -> print_string " "
-    
-    let print_const = fun c ->
-      match c with
-      | ConstENT(k) -> print_int k
-      | ConstFLOAT(k) -> print_float k
-      | ConstBOOL(k) -> if (k = true) then print_string "true" else print_string "false"
-
+      print_string v
 
     let print_exp = fun e ->
       match e with
-      | Var(k) -> print_var (Var(k))
-      | Const(k) -> print_const k
-
-    let print_ope = fun o ->
-      match o with
+      | Var(k) -> print_var k
       | AExp(ae1) -> Ar.printAExp ae1
       | BExp(be1) -> Bo.printBExp be1
       | Hash -> print_char '#'
+ 
 
     let rec print_instr = fun i ->
       match i with
       | Skip -> print_string "(seq_end)\n"
-      | Assign(v,o) -> print_string v; print_string " := "; print_ope o; print_string "\n"
-      | If(bexp, i1, i2) -> print_string " if("; print_ope bexp; print_string ") \n"
-      | While(bexp, i1) -> print_string " while("; print_ope bexp; print_string ") \n"
+      | Assign(v,o) -> print_string v; print_string " := "; print_exp o; print_string "\n"
+      | If(bexp, i1, i2) -> print_string " if("; print_exp bexp; print_string ") \n"
+      | While(bexp, i1) -> print_string " while("; print_exp bexp; print_string ") \n"
       | Seq(i1, i2) -> print_instr i1
 
     exception Echec of string * (AL.token AL.mylist)
@@ -80,57 +66,121 @@ module AnalyseurSyntaxique =
       | _ -> raise (Echec ("Var attendu, a,b,c ou d ", l))
 
 
-    let p_C : (const, AL.token) ranalist = fun l ->
+    let p_C : (exp, AL.token) ranalist = fun l ->
       match l() with
-      | Cons(AL.ValueENT(k), l1) -> (ConstENT(k), l1)
-      | Cons(AL.ValueBOOL(k), l1) -> (ConstBOOL(k), l1)
-      | Cons(AL.ValueFLOAT(k), l1) -> (ConstFLOAT(k), l1)
+      | Cons(AL.ValueENT(k), l1) -> (AExp(Ar.CoENT(k)), l1)
+      | Cons(AL.ValueBOOL(k), l1) -> (BExp(Bo.CoB(k)), l1)
+      | Cons(AL.ValueFLOAT(k), l1) -> (AExp(Ar.CoENT(1)), l1) (* not yet implemented *)
       | _ -> raise (Echec ("Const attendu, 0 ou 1 ", l))
 
 
     let p_E : (exp, AL.token) ranalist = fun l ->
       match l() with
       | Cons(AL.Identifier(s), l1) -> let (var,suite) = p_V l in ((Var(var),suite))
-      | Cons(AL.ValueENT(k), l1) -> let (var, suite) =  p_C l in (Const(var), suite)
-      | Cons(AL.ValueBOOL(k), l1) -> let (var, suite) =  p_C l in (Const(var), suite)
-      | Cons(AL.ValueFLOAT(k), l1) -> let (var, suite) =  p_C l in (Const(var), suite)
+      | Cons(AL.ValueENT(k), l1) -> let (var, suite) =  p_C l in (var, suite)
+      | Cons(AL.ValueBOOL(k), l1) -> let (var, suite) =  p_C l in (var, suite)
+      | Cons(AL.ValueFLOAT(k), l1) -> let (var, suite) =  p_C l in (var, suite)
       | _ -> raise (Echec ("Exp attendu ", l))
 
     (* ameliorable *)
     (* recursive à gauche , on commence par les constantes et var pour éviter récursion infini*)
-    let rec p_AExp : (Ar.aExp, AL.token) ranalist = fun l ->
+    let rec p_AExp : (exp, AL.token) ranalist = fun l ->
       l |>
-        (p_C ++> fun a -> (match a with
-                          | ConstENT(k) -> return (Ar.CoENT(k))
-                          | _ -> raise (Echec ("INT requested\n", l))))
+        (terminal AL.TPlus +> p_Op ++> fun b -> (match b with
+                                                 | Var(s) -> return (AExp(Ar.AplENT(Ar.CoENT(0),Ar.VaENT(s))))
+                                                 | AExp(a) -> return (AExp(Ar.AplENT(Ar.CoENT(0), a)))
+                                                 | _ -> raise (Echec ("Syntax error", l))))
         +|
-          (p_V ++> fun a -> return (Ar.VaENT(a)))
+          (terminal AL.TMinus +> p_Op ++> fun b -> (match b with
+                                                 | Var(s) -> return (AExp(Ar.AmiENT(Ar.CoENT(0),Ar.VaENT(s))))
+                                                 | AExp(a) -> return (AExp(Ar.AmiENT(Ar.CoENT(0), a)))
+                                                 | _ -> raise (Echec ("Syntax error", l))))
         +|
-          (p_AExp ++> fun a -> terminal AL.TPlus +> p_AExp ++> fun b -> return (Ar.AplENT(a,b)))
+          (terminal AL.TDivide +> p_Op ++> fun b -> (match b with
+                                                 | Var(s) -> return (AExp(Ar.AdiENT(Ar.CoENT(0),Ar.VaENT(s))))
+                                                 | AExp(a) -> return (AExp(Ar.AdiENT(Ar.CoENT(0), a)))
+                                                 | _ -> raise (Echec ("Syntax error", l))))
         +|
-          (p_AExp ++> fun a -> terminal AL.TMinus +> p_AExp ++> fun b -> return (Ar.AmiENT(a,b)))
+          (terminal AL.TMultiply +> p_Op ++> fun b -> (match b with
+                                                 | Var(s) -> return (AExp(Ar.AmuENT(Ar.CoENT(0),Ar.VaENT(s))))
+                                                 | AExp(a) -> return (AExp(Ar.AmuENT(Ar.CoENT(0), a)))
+                                                 | _ -> raise (Echec ("Syntax error", l))))
         +|
-          (p_AExp ++> fun a -> terminal AL.TDivide +> p_AExp ++> fun b -> return (Ar.AdiENT(a,b)))
+          (terminal AL.TModulo +> p_Op ++> fun b -> (match b with
+                                                 | Var(s) -> return (AExp(Ar.AmoENT(Ar.CoENT(0),Ar.VaENT(s))))
+                                                 | AExp(a) -> return (AExp(Ar.AmoENT(Ar.CoENT(0), a)))
+                                                 | _ -> raise (Echec ("Syntax error", l))))
         +|
-          (p_AExp ++> fun a -> terminal AL.TMultiply +> p_AExp ++> fun b -> return (Ar.AmuENT(a,b)))
+          (p_V ++> fun a -> return(AExp(Ar.VaENT(a))))
         +|
-          (p_AExp ++> fun a -> terminal AL.TModulo +> p_AExp ++> fun b -> return (Ar.AmoENT(a,b)))
-
-    let rec p_BExp : (Bo.boolExp, AL.token) ranalist = fun l ->
+          (p_C ++> fun a -> (match a with
+                             | AExp(a1) -> return(AExp(a1))
+                             | _ -> raise (Echec ("INT CONST requested\n", l))))                            
+    and p_BExp : (exp, AL.token) ranalist = fun l ->
       l |>
+        (terminal AL.TEgale +> p_Op ++> fun b ->
+                                        match b with
+                                        | AExp(a) -> return (BExp(Bo.EqualB(Ar.CoENT(0), a)))
+                                        | Var(s) -> return (BExp(Bo.EqualB(Ar.CoENT(0), Ar.VaENT(s))))
+                                        | _ -> raise (Echec("Syntax error\n", l)))
+        +|
         (p_C ++> fun a -> (match a with
-                           | ConstBOOL(k) -> return (Bo.CoB(k))
+                           | BExp(b) -> return (BExp(b))
                            | _ -> raise (Echec ("BOOL requested\n", l))))
         +|
-          (p_V ++> fun a -> return (Bo.VaB(a)))
-        +|
-          (p_AExp ++> fun a -> terminal AL.TEgale +> p_AExp ++> fun b -> return (Bo.EqualB(a,b)))
+        (p_V ++> fun a -> return (BExp(Bo.VaB(a))))
+       (* +|
+          p_AExp ++> fun a -> terminal AL.TEgale +> p_AExp ++> fun b -> return (Bo.EqualB(a,b)))*)
 
-
-    let p_Op : (ope, AL.token) ranalist = fun l ->
+    and p_Op : (exp, AL.token) ranalist = fun l ->
       l |>
-        (p_AExp ++> fun a -> return (AExp(a)))
-        +| (p_BExp ++> fun b -> return (BExp(b)))
+        (p_C ++> fun a -> p_AExp ++>
+                            fun b ->
+                            (match a,b with
+                             | (BExp(_), _) -> raise (Echec ("Type error", l))
+                             | (AExp(Ar.VaENT(_)), _) -> raise (Echec ("Syntax error", l))
+                             | (AExp(Ar.CoENT(_)),_) -> raise (Echec ("Syntax error", l))
+                             | (AExp(l),AExp(Ar.AplENT(_, r))) -> return (AExp(Ar.AplENT(l,r)))
+                             | (AExp(l),AExp(Ar.AmiENT(_, r))) -> return (AExp(Ar.AmiENT(l,r)))
+                             | (AExp(l),AExp(Ar.AdiENT(_, r))) -> return (AExp(Ar.AdiENT(l,r)))
+                             | (AExp(l),AExp(Ar.AmuENT(_, r))) -> return (AExp(Ar.AmuENT(l,r)))
+                             | (AExp(l),AExp(Ar.AmoENT(_, r))) -> return (AExp(Ar.AmoENT(l,r)))
+                             | _ -> raise (Echec ("Syntax error", l))))
+        +|
+          (p_V ++> fun a -> p_AExp ++>
+                            fun b ->
+                            (match b with
+                             | AExp(Ar.AplENT(_, r)) -> return (AExp(Ar.AplENT(Ar.VaENT(a),r)))
+                             | AExp(Ar.AmiENT(_, r)) -> return (AExp(Ar.AmiENT(Ar.VaENT(a),r)))
+                             | AExp(Ar.AdiENT(_, r)) -> return (AExp(Ar.AdiENT(Ar.VaENT(a),r)))
+                             | AExp(Ar.AmuENT(_, r)) -> return (AExp(Ar.AmuENT(Ar.VaENT(a),r)))
+                             | AExp(Ar.AmoENT(_, r)) -> return (AExp(Ar.AmoENT(Ar.VaENT(a),r)))
+                             | _ -> raise (Echec ("Syntax error", l))))                            
+        +|
+          (p_C ++> fun a -> p_BExp ++>
+                            fun b ->
+                            (match a,b with
+                             | (BExp(k),BExp(Bo.OrB(_, b))) -> return (BExp(Bo.OrB(k,b)))
+                             | (BExp(k),BExp(Bo.AndB(_, b))) -> return (BExp(Bo.AndB(k,b)))
+                             | (AExp(a1),BExp(Bo.EqualB(_, b))) -> return (BExp(Bo.EqualB(a1,b)))
+                             | (AExp(_), _) -> raise (Echec ("Type error", l))
+                             | _ -> raise (Echec ("Syntax error", l))))
+        +|
+          (p_V ++> fun a -> p_BExp ++>
+                            fun b ->
+                            (match b with
+                             | BExp(Bo.OrB(_, b)) -> return (BExp(Bo.OrB(Bo.VaB(a),b)))
+                             | BExp(Bo.AndB(_, b)) -> return (BExp(Bo.AndB(Bo.VaB(a),b)))
+                             | BExp(Bo.EqualB(_, b)) -> return (BExp(Bo.EqualB(Ar.VaENT(a),b)))
+                             | _ -> raise (Echec ("Syntax error", l))))
+        +|
+          (terminal AL.TNegat +> p_Op ++> fun a -> match a with
+                                                   | BExp(k) -> return (BExp(Bo.NegB(k)))
+                                                   | _ -> raise (Echec ("Type error", l)))
+        +|
+          (p_V ++> fun a -> return (Var(a)))
+        +|
+          (p_C ++> fun a -> return (a))
     (* +| terminal AL.THash +> return(Hash)*)
 
 

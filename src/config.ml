@@ -25,7 +25,8 @@ module Config =
                                                   (S.modify_var c newVal s))
                                  | A.BExp(be1) -> (let res = (Bo.evalBExp be1 s) in
                                                    let newVal = (S.VBool(res)) in
-                                                     S.modify_var c newVal s))
+                                                   S.modify_var c newVal s)
+                                 | A.Var(v) -> S.modify_var c (S.read_var v s) s)
       | _ -> raise InstrNotAssign
 
 
@@ -51,6 +52,11 @@ module Config =
                             | A.AExp(aexp) -> (let resultA = Ar.evalAExp aexp s1 in
                                                (if (resultA = 0) then Config(i2,s1)
                                                 else Config(i1,s1)))
+                            | A.Var(v) -> (let resEval = S.read_var v s1 in
+                                           match resEval with
+                                           | VBool(k) -> if (k = true) then Config(i1,s1) else Config(i2,s1)
+                                           | VEnt(k) -> if (k = 0) then Config(i2, s1) else Config(i1, s1)
+                                           | _ -> raise (StepError s1))
                             | _ -> raise (StepError s1)))
     with S.VarNotFound(ch, st) -> print_string "Looking for "; print_string ch; print_string " on state : "; let res = S.print_state st in (raise (StepError res))
 
@@ -114,13 +120,13 @@ let res0 = automatedTest str0
 let str1 = "a:=1; b:=1; c:=1;while(a){if(c){c:=0;a:=b}else{b:=0;c:=a}}"
 let res1 = automatedTest str1*)
 
-let str2 = "w:=true;a:=1;b:=1;c:=1;d:=1"
+let str2 = "a:=1;b:=1;c:=1;d:=1"
 let res2 = automatedTest str2
 
 let str3 = "a:=1;b:=1;if(b = a) { b := 2 } else { a := 2}"
 let res3 = automatedTest str3
 
-let str4 = "if(a){c:=0}else{c:=1};if(b){d:=1}else{d:=0}"
+let str4 = "b:=1;a:=1;if(a){c:=0}else{c:=1};if(b){d:=1}else{d:=0}"
 let res4 = automatedTest str4
 
 let str5 = "a :=1 ;
