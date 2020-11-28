@@ -64,9 +64,16 @@ How to use "automatedTest" :
     let _ = automatedTest str1
 ```
 
-How to use the debugger :
+and how to use the debugger for "automatedTest" :
 ```
     (debug) next  #Execute one step
     (debug) print  #Print the current state (value of variables during execution)
     (debug) continue  #Continue until the end of the program
+```
+How to use "Interactive Execution" :   
+During the time of the execution, you'll be allocated one state. Every instructions are applied on this state.   
+Instructions can be simple as : " id := 1 ", or a complete program like :   
+" a:=1;b:=1;if(b = a) { b := 2 } else { a := 2} "
+```
+    > [waiting for an instruction]
 ```
