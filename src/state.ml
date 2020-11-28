@@ -55,7 +55,7 @@ module State =
       | State(id0, value, suite) ->
          print_string id0; print_string " : "; print_value value;
          print_string " | "; print_state suite
-      | EOS -> print_string " End Of State \n"; s
+      | EOS -> print_string "\n"
    
 
 end

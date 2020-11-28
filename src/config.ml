@@ -58,50 +58,79 @@ module Config =
                                            | VEnt(k) -> if (k = 0) then Config(i2, s1) else Config(i1, s1)
                                            | _ -> raise (StepError s1))
                             | _ -> raise (StepError s1)))
-    with S.VarNotFound(ch, st) -> print_string "Looking for "; print_string ch; print_string " on state : "; let res = S.print_state st in (raise (StepError res))
+    with S.VarNotFound(ch, st) -> print_string "Looking for "; print_string ch; print_string " on state : "; S.print_state st; (raise (StepError st))
 
     let rec execute_aux = fun i ->
       fun s ->
       fun flag ->
+      fun count ->
       if (flag = 1) then
-        (A.print_instr i;
+        (print_string "[Next instr]  " ; A.print_instr i;
         print_string "(debug) ";
          let user_input = read_line() in
-         if (String.equal user_input "continue") then execute_aux i s 0
-         else (if (String.equal user_input "print") then (let _ = S.print_state s in execute_aux i s flag)
+         if (String.equal user_input "continue") then execute_aux i s 0 count
+         else (if (String.equal user_input "print") then (print_string "[State] ";S.print_state s;execute_aux i s flag count)
          else (if (String.equal user_input "next") then  
          (let Config(newInstr, newState) = one_step i s in
           (match newInstr with
-           | Skip -> newState
-           | _ -> execute_aux newInstr newState flag))
-               else execute_aux i s flag)))
+           | Skip -> (newState, count)
+           | _ -> execute_aux newInstr newState flag (count + 1)))
+               else execute_aux i s flag count)))
     else (let Config(newInstr, newState) = one_step i s in
           (match newInstr with
-           | Skip -> newState
-           | _ -> execute_aux newInstr newState flag))
+           | Skip -> (newState, count)
+           | _ -> execute_aux newInstr newState flag (count + 1)))
     
     let execute = fun instrInit ->
       print_string "Would you like to use debugger ? (Y/N) \n";
       let user_input = read_line () in
       let flag = if (String.equal user_input "Y") then 1 else 0 in
-      execute_aux instrInit (S.create_state) flag
-                                   
+      let (finalState, counter) = execute_aux instrInit (S.create_state) flag 0 in
+      print_string"\n[FINAL STATE] \n"; S.print_state finalState;
+      print_string"\n[NUMBER OF STEP] : "; print_int counter; finalState
+
+
+    
+    let rec interactive_execution = fun s ->
+      S.print_state s;
+      print_string ">";
+      let userInput = read_line() in
+      let tokens = Al.analex userInput in
+      print_string "Tokens : \n"; Al.print_token_list tokens; let res1 = A.ast_parser_func tokens in
+      let (sNext, _) = execute_aux res1 s 0 0 in
+      interactive_execution sNext
+
+    let interactive_exec_start = fun () ->
+      interactive_execution S.create_state
+      
 
 end
 
 module C = Config
 
+
+let _ =
+  print_string "Two options available :\n";
+  print_string "1 for Automated Tests\n";
+  print_string "2 for Interactive Execution\n";
+  print_string "Default option : AutomatedTests\n";
+  print_string "Option (1/2) :";
+  let userInput = read_line() in
+  if (String.equal userInput "2") then C.interactive_exec_start()
+  else ()
+
 let automatedTest = fun s ->
-  print_string "Execution starts \n";
-  print_string "Prog : \n";
+  print_string "\n-------------------------------------\n";
+  print_string "\nExecution starts \n";
+  print_string "Prog : \n>";
   print_string s;
   print_string "\n";
   print_string "\n";
   let to1 = Al.analex s in
-  Al.print_token_list to1;
+  print_string "Tokens : \n"; Al.print_token_list to1; print_string "\n";
   let res1 = A.ast_parser_func to1 in
   let state1 = C.execute res1 in
-  let state1 = S.print_state state1 in state1
+  state1
      
 
 (*let str0 = " if(c) 

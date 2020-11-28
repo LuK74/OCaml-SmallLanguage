@@ -159,8 +159,8 @@ module AnalyseurLexicale =
     | TAffec -> print_string ":=" 
     | TEgale -> print_string "=" 
     | TNegat -> print_string "!" 
-    | TOr -> print_string "|" 
-    | TAnd -> print_string "&"
+    | TOr -> print_string "||" 
+    | TAnd -> print_string "&&"
     | TGtn -> print_string ">"
     | TLtn -> print_string "<"
     | TGeq -> print_string ">="
@@ -232,8 +232,10 @@ module AnalyseurLexicale =
     
   let rec print_token_list = fun list ->
     match list() with
-    | Cons(t, suite) -> print_token_list suite
-    | _ -> print_string "\n Prog End \n"exception NotEntValue of string
+    | Cons(t, suite) -> print_token t; print_token_list suite
+    | _ -> print_string "\n"
+
+  exception NotEntValue of string
 
 
   let p_espace : char analist = terminal ' ' +| terminal '\n' +| terminal '\t'

@@ -155,7 +155,6 @@ module AnalyseurSyntaxique =
                             (match a,b with
                              | (BExp(_), _) -> raise (Echec ("Type error", l))
                              | (AExp(Ar.VaENT(_)), _) -> raise (Echec ("Syntax error", l))
-                             | (AExp(Ar.CoENT(_)),_) -> raise (Echec ("Syntax error", l))
                              | (AExp(l),AExp(Ar.BinOpENT(op,_, r))) -> return (AExp(Ar.BinOpENT(op,l,r)))
                              | _ -> raise (Echec ("Syntax error", l))))
         +|
@@ -181,6 +180,7 @@ module AnalyseurSyntaxique =
                                | _ -> raise (Echec ("Syntax error", l))))
         +|
           (p_OpeUnaB ++> fun op -> p_Op ++> fun a -> match a with
+                                                   | Var(k) -> return (BExp(Bo.UnaOpB(op, Bo.VaB(k))))
                                                    | BExp(k) -> return (BExp(Bo.UnaOpB(op, k)))
                                                    | _ -> raise (Echec ("Type error", l)))
         +|

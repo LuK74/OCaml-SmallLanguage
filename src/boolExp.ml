@@ -89,19 +89,19 @@ module BoolExp =
       (match b with
       | UnaOpB (op, b1) ->
          (match op with
-          | ONeg ->  if ((evalBExp b1 s1) = true) then true else false)
+          | ONeg ->  if ((evalBExp b1 s1) = true) then false else true)
       | _ -> raise WrongPrintFunc)
     and evalBinOpA = fun b -> fun s1 ->
       (match b with
       | BinOpA(op, aENT1, aENT2) ->
          (match op with
           | OEqual -> if ((Ar.evalAExp aENT1 s1) = (Ar.evalAExp aENT2 s1)) then true else false
-          | OLeq ->  if ((Ar.evalAExp aENT1 s1) = (Ar.evalAExp aENT2 s1)) then true else false
-          | OGeq -> if ((Ar.evalAExp aENT1 s1) = (Ar.evalAExp aENT2 s1)) then true
+          | OLeq ->  if ((Ar.evalAExp aENT1 s1) <= (Ar.evalAExp aENT2 s1)) then true else false
+          | OGeq -> if ((Ar.evalAExp aENT1 s1) >= (Ar.evalAExp aENT2 s1)) then true
                     else false
-          | OGtn ->if ((Ar.evalAExp aENT1 s1) = (Ar.evalAExp aENT2 s1)) then true
+          | OGtn ->if ((Ar.evalAExp aENT1 s1) > (Ar.evalAExp aENT2 s1)) then true
                    else false
-          | OLtn ->  if ((Ar.evalAExp aENT1 s1) = (Ar.evalAExp aENT2 s1)) then true
+          | OLtn ->  if ((Ar.evalAExp aENT1 s1) < (Ar.evalAExp aENT2 s1)) then true
                      else false)
       | _ -> raise WrongPrintFunc)
     
