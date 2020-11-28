@@ -97,8 +97,7 @@ let automatedTest = fun s ->
   print_string s;
   print_string "\n";
   print_string "\n";
-  let ch1 = Al.list_of_string s in
-  let to1 = Al.token_generator ch1 in
+  let to1 = Al.analex s in
   Al.print_token_list to1;
   let res1 = A.ast_parser_func to1 in
   let state1 = C.execute res1 in

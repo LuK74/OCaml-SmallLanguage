@@ -1,6 +1,8 @@
 open State
+open AnalyseurLexicale
 
 module S = State
+module AL = AnalyseurLexicale
 
 module ArithExp =
   struct
@@ -39,6 +41,11 @@ module ArithExp =
       | AmiENT (a1 , a2) -> (evalAExp a1 s1) - (evalAExp a2 s1)
       | AdiENT (a1 , a2) -> (evalAExp a1 s1) / (evalAExp a2 s1)
       | AmoENT (a1 , a2) -> (evalAExp a1 s1) mod (evalAExp a2 s1)
+
+
+  
+
+          
     
     (*type aExp = AExpENT of aExpENT | AExpFLOAT of aExpFLOAT
     and aExpENT =

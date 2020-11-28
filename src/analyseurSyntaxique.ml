@@ -9,7 +9,8 @@ module Bo = BoolExp
 module AnalyseurSyntaxique =
   struct
     type var = string
-    type exp = Var of var | AExp of Ar.aExp | BExp of Bo.boolExp | Hash
+    type exp = AExp of Ar.aExp | BExp of Bo.boolExp | Var of var | Hash
+
 
     type instr = Assign of var * exp
                | If of exp * instr * instr
@@ -102,14 +103,14 @@ module AnalyseurSyntaxique =
                                                  | _ -> raise (Echec ("Syntax error", l))))
         +|
           (terminal AL.TMultiply +> p_Op ++> fun b -> (match b with
-                                                 | Var(s) -> return (AExp(Ar.AmuENT(Ar.CoENT(0),Ar.VaENT(s))))
-                                                 | AExp(a) -> return (AExp(Ar.AmuENT(Ar.CoENT(0), a)))
-                                                 | _ -> raise (Echec ("Syntax error", l))))
+                                                       | Var(s) -> return (AExp(Ar.AmuENT(Ar.CoENT(0),Ar.VaENT(s))))
+                                                       | AExp(a) -> return (AExp(Ar.AmuENT(Ar.CoENT(0), a)))
+                                                       | _ -> raise (Echec ("Syntax error", l))))
         +|
           (terminal AL.TModulo +> p_Op ++> fun b -> (match b with
-                                                 | Var(s) -> return (AExp(Ar.AmoENT(Ar.CoENT(0),Ar.VaENT(s))))
-                                                 | AExp(a) -> return (AExp(Ar.AmoENT(Ar.CoENT(0), a)))
-                                                 | _ -> raise (Echec ("Syntax error", l))))
+                                                     | Var(s) -> return (AExp(Ar.AmoENT(Ar.CoENT(0),Ar.VaENT(s))))
+                                                     | AExp(a) -> return (AExp(Ar.AmoENT(Ar.CoENT(0), a)))
+                                                     | _ -> raise (Echec ("Syntax error", l))))
         +|
           (p_V ++> fun a -> return(AExp(Ar.VaENT(a))))
         +|
@@ -124,12 +125,12 @@ module AnalyseurSyntaxique =
                                         | Var(s) -> return (BExp(Bo.EqualB(Ar.CoENT(0), Ar.VaENT(s))))
                                         | _ -> raise (Echec("Syntax error\n", l)))
         +|
-        (p_C ++> fun a -> (match a with
-                           | BExp(b) -> return (BExp(b))
-                           | _ -> raise (Echec ("BOOL requested\n", l))))
+          (p_C ++> fun a -> (match a with
+                             | BExp(b) -> return (BExp(b))
+                             | _ -> raise (Echec ("BOOL requested\n", l))))
         +|
-        (p_V ++> fun a -> return (BExp(Bo.VaB(a))))
-       (* +|
+          (p_V ++> fun a -> return (BExp(Bo.VaB(a))))
+    (* +|
           p_AExp ++> fun a -> terminal AL.TEgale +> p_AExp ++> fun b -> return (Bo.EqualB(a,b)))*)
 
     and p_Op : (exp, AL.token) ranalist = fun l ->
@@ -148,31 +149,31 @@ module AnalyseurSyntaxique =
                              | _ -> raise (Echec ("Syntax error", l))))
         +|
           (p_V ++> fun a -> p_AExp ++>
-                            fun b ->
-                            (match b with
-                             | AExp(Ar.AplENT(_, r)) -> return (AExp(Ar.AplENT(Ar.VaENT(a),r)))
-                             | AExp(Ar.AmiENT(_, r)) -> return (AExp(Ar.AmiENT(Ar.VaENT(a),r)))
-                             | AExp(Ar.AdiENT(_, r)) -> return (AExp(Ar.AdiENT(Ar.VaENT(a),r)))
-                             | AExp(Ar.AmuENT(_, r)) -> return (AExp(Ar.AmuENT(Ar.VaENT(a),r)))
-                             | AExp(Ar.AmoENT(_, r)) -> return (AExp(Ar.AmoENT(Ar.VaENT(a),r)))
-                             | _ -> raise (Echec ("Syntax error", l))))                            
+                              fun b ->
+                              (match b with
+                               | AExp(Ar.AplENT(_, r)) -> return (AExp(Ar.AplENT(Ar.VaENT(a),r)))
+                               | AExp(Ar.AmiENT(_, r)) -> return (AExp(Ar.AmiENT(Ar.VaENT(a),r)))
+                               | AExp(Ar.AdiENT(_, r)) -> return (AExp(Ar.AdiENT(Ar.VaENT(a),r)))
+                               | AExp(Ar.AmuENT(_, r)) -> return (AExp(Ar.AmuENT(Ar.VaENT(a),r)))
+                               | AExp(Ar.AmoENT(_, r)) -> return (AExp(Ar.AmoENT(Ar.VaENT(a),r)))
+                               | _ -> raise (Echec ("Syntax error", l))))                            
         +|
           (p_C ++> fun a -> p_BExp ++>
-                            fun b ->
-                            (match a,b with
-                             | (BExp(k),BExp(Bo.OrB(_, b))) -> return (BExp(Bo.OrB(k,b)))
-                             | (BExp(k),BExp(Bo.AndB(_, b))) -> return (BExp(Bo.AndB(k,b)))
-                             | (AExp(a1),BExp(Bo.EqualB(_, b))) -> return (BExp(Bo.EqualB(a1,b)))
-                             | (AExp(_), _) -> raise (Echec ("Type error", l))
-                             | _ -> raise (Echec ("Syntax error", l))))
+                              fun b ->
+                              (match a,b with
+                               | (BExp(k),BExp(Bo.OrB(_, b))) -> return (BExp(Bo.OrB(k,b)))
+                               | (BExp(k),BExp(Bo.AndB(_, b))) -> return (BExp(Bo.AndB(k,b)))
+                               | (AExp(a1),BExp(Bo.EqualB(_, b))) -> return (BExp(Bo.EqualB(a1,b)))
+                               | (AExp(_), _) -> raise (Echec ("Type error", l))
+                               | _ -> raise (Echec ("Syntax error", l))))
         +|
           (p_V ++> fun a -> p_BExp ++>
-                            fun b ->
-                            (match b with
-                             | BExp(Bo.OrB(_, b)) -> return (BExp(Bo.OrB(Bo.VaB(a),b)))
-                             | BExp(Bo.AndB(_, b)) -> return (BExp(Bo.AndB(Bo.VaB(a),b)))
-                             | BExp(Bo.EqualB(_, b)) -> return (BExp(Bo.EqualB(Ar.VaENT(a),b)))
-                             | _ -> raise (Echec ("Syntax error", l))))
+                              fun b ->
+                              (match b with
+                               | BExp(Bo.OrB(_, b)) -> return (BExp(Bo.OrB(Bo.VaB(a),b)))
+                               | BExp(Bo.AndB(_, b)) -> return (BExp(Bo.AndB(Bo.VaB(a),b)))
+                               | BExp(Bo.EqualB(_, b)) -> return (BExp(Bo.EqualB(Ar.VaENT(a),b)))
+                               | _ -> raise (Echec ("Syntax error", l))))
         +|
           (terminal AL.TNegat +> p_Op ++> fun a -> match a with
                                                    | BExp(k) -> return (BExp(Bo.NegB(k)))
@@ -218,17 +219,17 @@ module AnalyseurSyntaxique =
 
 
     let rec convertLazyToRegular = fun (l : 't AL.mylist) -> fun regular ->
-                                                          match l() with
-                                                          | AL.Nil -> regular
-                                                          | AL.Cons(a,l1) -> convertLazyToRegular l1 (regular@[a])
+                                                             match l() with
+                                                             | AL.Nil -> regular
+                                                             | AL.Cons(a,l1) -> convertLazyToRegular l1 (regular@[a])
 
 
     let ast_parser_func = fun (s1 : 't AL.mylist) ->
-                                (let parsed_string = p_S s1 in
-                                 match parsed_string with
-                                 | astRes,l -> (match l() with
-                                                | AL.Nil -> astRes
-                                                | _ -> raise (Echec ("N'appartient pas à la grammaire", l))))
+      (let parsed_string = p_S s1 in
+       match parsed_string with
+       | astRes,l -> (match l() with
+                      | AL.Nil -> astRes
+                      | _ -> raise (Echec ("N'appartient pas à la grammaire", l))))
     
     
     

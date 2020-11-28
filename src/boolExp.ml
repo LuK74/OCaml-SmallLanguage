@@ -13,7 +13,11 @@ module BoolExp =
       | AndB of boolExp * boolExp
       | NegB of boolExp
       | EqualB of Ar.aExp * Ar.aExp
-
+      | LeqB of Ar.aExp * Ar.aExp
+      | GeqB of Ar.aExp * Ar.aExp
+      | GtnB of Ar.aExp * Ar.aExp
+      | LtnB of Ar.aExp * Ar.aExp
+    
     exception TypeError
 
      let rec printBExp = fun b1 ->
@@ -24,6 +28,11 @@ module BoolExp =
       | AndB (b1, b2) -> printBExp b1; print_string "&&"; printBExp b2
       | NegB (b1) -> print_char '!';printBExp b1
       | EqualB (aENT1, aENT2) -> Ar.printAExp aENT1; print_char '='; Ar.printAExp aENT2
+      | LeqB (aENT1, aENT2) -> Ar.printAExp aENT1; print_string "<="; Ar.printAExp aENT2
+      | GeqB (aENT1, aENT2) -> Ar.printAExp aENT1; print_string ">="; Ar.printAExp aENT2
+      | GtnB (aENT1, aENT2) -> Ar.printAExp aENT1; print_char '>'; Ar.printAExp aENT2
+      | LtnB (aENT1, aENT2) -> Ar.printAExp aENT1; print_char '<'; Ar.printAExp aENT2
+     
 
     let rec evalBExp = fun b1 ->
       fun s1 ->
@@ -37,6 +46,14 @@ module BoolExp =
       | AndB (b1, b2) -> (evalBExp b1 s1 && evalBExp b2 s1)
       | NegB (b1) -> if ((evalBExp b1 s1) = true) then true else false
       | EqualB (aENT1, aENT2) -> if ((Ar.evalAExp aENT1 s1) = (Ar.evalAExp aENT2 s1)) then true
-                                    else false
+                                 else false
+      | LeqB (aENT1, aENT2) -> if ((Ar.evalAExp aENT1 s1) = (Ar.evalAExp aENT2 s1)) then true
+                                 else false
+      | GtnB (aENT1, aENT2) -> if ((Ar.evalAExp aENT1 s1) = (Ar.evalAExp aENT2 s1)) then true
+                                 else false
+      | LtnB (aENT1, aENT2) -> if ((Ar.evalAExp aENT1 s1) = (Ar.evalAExp aENT2 s1)) then true
+                                 else false
+      | GtnB (aENT1, aENT2) -> if ((Ar.evalAExp aENT1 s1) = (Ar.evalAExp aENT2 s1)) then true
+                                 else false
 
   end
