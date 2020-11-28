@@ -11,6 +11,39 @@ https://ltpf.gricad-pages.univ-grenoble-alpes.fr/commun/projet/sos.pdf
 ## Overleaf
 https://www.overleaf.com/4185181216ykhccbpvsvvx
 
+## Our language
+- Affectation :   
+```pascal
+    id := 1
+```
+- Operators :    
+=, <, <=, >=, >, ||, &&, ! are available
+   
+- While : 
+```pascal
+    while (id = 1) {
+        id2 := id2 + 1
+    }   
+```
+   
+- If : 
+```pascal
+    if (id = 1) {
+        id2 := true
+    } else {
+        id2 := false
+    }
+```
+   
+- Int operators :
++, -, *, / are available (operations priority are not implemented yet, it'll starts from the right)
+```pascal
+    id := 1 + 2 * 3 - 4
+```
+Id will be equal to -1 (1 + 2 * (-1) --> 1 + (-2) --> -1)
+   
+
+
 ## How to use
 To compile :  
 ```bash
