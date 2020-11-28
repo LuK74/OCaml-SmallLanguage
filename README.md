@@ -63,8 +63,9 @@ How to use "automatedTest" :
     (* just call automatedTest, it will return the final state, but also print it *)
     let _ = automatedTest str1
 ```
+At the end of every test, the number of step required is return. (/!\, While instructions count for 2, and Skip (end of sequence) count for 1 even if it doesn't do anything). This'll be change later.
 
-and how to use the debugger for "automatedTest" :
+And how to use the debugger for "automatedTest" :
 ```
     (debug) next  #Execute one step
     (debug) print  #Print the current state (value of variables during execution)
