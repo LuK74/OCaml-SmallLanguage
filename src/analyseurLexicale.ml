@@ -130,6 +130,10 @@ module AnalyseurLexicale =
     | TNegat
     | TOr
     | TAnd
+    | TGtn
+    | TLtn
+    | TGeq
+    | TLeq
     | TPlus
     | TMinus
     | TMultiply
@@ -157,6 +161,10 @@ module AnalyseurLexicale =
     | TNegat -> print_string "!" 
     | TOr -> print_string "|" 
     | TAnd -> print_string "&"
+    | TGtn -> print_string ">"
+    | TLtn -> print_string "<"
+    | TGeq -> print_string ">="
+    | TLeq -> print_string "<="
     | TPlus -> print_string "+" 
     | TMinus -> print_string "-" 
     | TMultiply -> print_string "*" 
@@ -186,8 +194,12 @@ module AnalyseurLexicale =
     | "}" -> TAccfer
     | "=" -> TEgale
     | "!" -> TNegat
-    | "|" -> TOr
-    | "&" -> TAnd
+    | "||" -> TOr
+    | "&&" -> TAnd
+    | ">" -> TGtn
+    | "<" -> TLtn 
+    | ">=" -> TGeq 
+    | "<=" -> TLeq
     | "+" -> TPlus
     | "*" -> TMultiply
     | "-" -> TMinus
@@ -212,6 +224,10 @@ module AnalyseurLexicale =
                             fun lc ->
                             (return (ValueENT (create_valueENT (string_of_list (fun () -> (Cons(c, lc)))) 0))))
         +| (terminal ':' +> terminal '=' +> return TAffec)
+        +| (terminal '|' +> terminal '|' +> return TOr)
+        +| (terminal '&' +> terminal '&' +> return TAnd)
+        +| (terminal '>' +> terminal '=' +> return TGeq)
+        +| (terminal '<' +> terminal '=' +> return TLeq)
         +| (anyterminal ++> fun c -> return (create_token (string_of_list (fun () -> (Cons(c, (fun () -> Nil)))))))
     
   let rec print_token_list = fun list ->

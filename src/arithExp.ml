@@ -7,14 +7,17 @@ module AL = AnalyseurLexicale
 module ArithExp =
   struct
 
+    type ope =
+      | APlus
+      | AMinus
+      | ADivide
+      | AMultiply
+      | AModulo
+
     type aExp =
       | CoENT of int
       | VaENT of string
-      | AplENT of aExp * aExp
-      | AmuENT of aExp * aExp
-      | AmiENT of aExp * aExp
-      | AdiENT of aExp * aExp
-      | AmoENT of aExp * aExp
+      | BinOpENT of ope * aExp * aExp
 
     exception TypeError
 
@@ -22,11 +25,13 @@ module ArithExp =
       match a1 with
       | CoENT (k) -> print_int k
       | VaENT (k) -> print_string k
-      | AplENT (a1 , a2) -> printAExp a1; print_char '+'; printAExp a2
-      | AmuENT (a1 , a2) -> printAExp a1; print_char '*'; printAExp a2
-      | AmiENT (a1 , a2) -> printAExp a1; print_char '-'; printAExp a2
-      | AdiENT (a1 , a2) -> printAExp a1; print_char '/'; printAExp a2
-      | AmoENT (a1 , a2) -> printAExp a1; print_char '%'; printAExp a2
+      | BinOpENT(op, a1, a2) ->
+         (match op with
+          | APlus -> printAExp a1; print_char '+'; printAExp a2
+          | AMultiply -> printAExp a1; print_char '*'; printAExp a2
+          | AMinus -> printAExp a1; print_char '-'; printAExp a2
+          | ADivide -> printAExp a1; print_char '/'; printAExp a2
+          | AModulo -> printAExp a1; print_char '%'; printAExp a2)
 
     let rec evalAExp = fun a1 ->
       fun s1 ->
@@ -36,14 +41,15 @@ module ArithExp =
                      (match res with
                      | S.VEnt(k) -> k
                      | _ -> raise TypeError))
-      | AplENT (a1 , a2) -> (evalAExp a1 s1) + (evalAExp a2 s1)
-      | AmuENT (a1 , a2) -> (evalAExp a1 s1) * (evalAExp a2 s1)
-      | AmiENT (a1 , a2) -> (evalAExp a1 s1) - (evalAExp a2 s1)
-      | AdiENT (a1 , a2) -> (evalAExp a1 s1) / (evalAExp a2 s1)
-      | AmoENT (a1 , a2) -> (evalAExp a1 s1) mod (evalAExp a2 s1)
+      | BinOpENT(op, a1, a2) ->
+         (match op with
+          | APlus -> (evalAExp a1 s1) + (evalAExp a2 s1)
+          | AMultiply -> (evalAExp a1 s1) * (evalAExp a2 s1)
+          | AMinus -> (evalAExp a1 s1) - (evalAExp a2 s1)
+          | ADivide -> (evalAExp a1 s1) / (evalAExp a2 s1)
+          | AModulo -> (evalAExp a1 s1) mod (evalAExp a2 s1))
 
 
-  
 
           
     

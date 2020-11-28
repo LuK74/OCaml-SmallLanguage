@@ -6,54 +6,106 @@ module Ar = ArithExp
 
 module BoolExp =
   struct
+
+    
+    type opeBinA =
+      | OEqual
+      | OLeq
+      | OGeq
+      | OGtn
+      | OLtn
+
+    type opeBinB =
+      | OOr
+      | OAnd
+
+    type opeUnaB =
+      | ONeg
+
+    type ope = BinaryBool of opeBinB | BinaryArith of opeBinA | UnaryBool of opeUnaB
+
+    
     type boolExp =
       | CoB of bool
       | VaB of string
-      | OrB of boolExp * boolExp
-      | AndB of boolExp * boolExp
-      | NegB of boolExp
-      | EqualB of Ar.aExp * Ar.aExp
-      | LeqB of Ar.aExp * Ar.aExp
-      | GeqB of Ar.aExp * Ar.aExp
-      | GtnB of Ar.aExp * Ar.aExp
-      | LtnB of Ar.aExp * Ar.aExp
+      | BinOpB of opeBinB * boolExp * boolExp
+      | BinOpA of opeBinA * Ar.aExp * Ar.aExp
+      | UnaOpB of opeUnaB * boolExp
     
     exception TypeError
-
-     let rec printBExp = fun b1 ->
+    exception WrongPrintFunc
+    
+    
+    let rec printBExp = fun b1 ->
       match b1 with
       | CoB (k) -> if (k = true) then print_string "true" else print_string "else"
       | VaB (k) -> print_string k
-      | OrB (b1, b2) -> printBExp b1; print_string "||"; printBExp b2
-      | AndB (b1, b2) -> printBExp b1; print_string "&&"; printBExp b2
-      | NegB (b1) -> print_char '!';printBExp b1
-      | EqualB (aENT1, aENT2) -> Ar.printAExp aENT1; print_char '='; Ar.printAExp aENT2
-      | LeqB (aENT1, aENT2) -> Ar.printAExp aENT1; print_string "<="; Ar.printAExp aENT2
-      | GeqB (aENT1, aENT2) -> Ar.printAExp aENT1; print_string ">="; Ar.printAExp aENT2
-      | GtnB (aENT1, aENT2) -> Ar.printAExp aENT1; print_char '>'; Ar.printAExp aENT2
-      | LtnB (aENT1, aENT2) -> Ar.printAExp aENT1; print_char '<'; Ar.printAExp aENT2
-     
+      | BinOpB(_,_,_) -> printBinOpB b1
+      | BinOpA(_,_,_) -> printBinOpA b1
+      | UnaOpB(_,_) -> printUnaOpB b1
+    and printBinOpB = fun b ->
+      match b with
+      | BinOpB(op, b1, b2) ->
+         (match op with
+          | OOr ->  printBExp b1; print_string "||"; printBExp b2
+          | OAnd -> printBExp b1; print_string "&&"; printBExp b2)
+      | _ -> raise WrongPrintFunc
+    and printUnaOpB = fun b ->
+      match b with
+      | UnaOpB (op, b1) ->
+         (match op with
+          | ONeg -> print_char '!';printBExp b1)
+      | _ -> raise WrongPrintFunc
+    and printBinOpA = fun b ->
+      match b with
+      | BinOpA(op, aENT1, aENT2) ->
+         (match op with
+          | OEqual -> Ar.printAExp aENT1; print_char '='; Ar.printAExp aENT2
+          | OLeq -> Ar.printAExp aENT1; print_string "<="; Ar.printAExp aENT2
+          | OGeq -> Ar.printAExp aENT1; print_string ">="; Ar.printAExp aENT2
+          | OGtn -> Ar.printAExp aENT1; print_char '>'; Ar.printAExp aENT2
+          | OLtn -> Ar.printAExp aENT1; print_char '<'; Ar.printAExp aENT2)
+      | _ -> raise WrongPrintFunc
 
-    let rec evalBExp = fun b1 ->
-      fun s1 ->
-      match b1 with
+
+    let rec evalBExp = fun b1 -> fun s1 ->
+      (match b1 with
       | CoB (k) -> k
-      | VaB (k) -> (let res = S.read_var k s1 in
-                    (match res with
-                     | S.VBool(k) -> k
-                     | _ -> raise TypeError))
-      | OrB (b1, b2) -> (evalBExp b1 s1 || evalBExp b2 s1)
-      | AndB (b1, b2) -> (evalBExp b1 s1 && evalBExp b2 s1)
-      | NegB (b1) -> if ((evalBExp b1 s1) = true) then true else false
-      | EqualB (aENT1, aENT2) -> if ((Ar.evalAExp aENT1 s1) = (Ar.evalAExp aENT2 s1)) then true
-                                 else false
-      | LeqB (aENT1, aENT2) -> if ((Ar.evalAExp aENT1 s1) = (Ar.evalAExp aENT2 s1)) then true
-                                 else false
-      | GtnB (aENT1, aENT2) -> if ((Ar.evalAExp aENT1 s1) = (Ar.evalAExp aENT2 s1)) then true
-                                 else false
-      | LtnB (aENT1, aENT2) -> if ((Ar.evalAExp aENT1 s1) = (Ar.evalAExp aENT2 s1)) then true
-                                 else false
-      | GtnB (aENT1, aENT2) -> if ((Ar.evalAExp aENT1 s1) = (Ar.evalAExp aENT2 s1)) then true
-                                 else false
+      | VaB (k) -> let evalBRes = S.read_var k s1 in
+                   (match evalBRes with
+                    | S.VBool(k) -> k
+                    | _ -> raise TypeError)
+      | BinOpB(_,_,_) -> evalBinOpB b1 s1
+      | BinOpA(_,_,_) -> evalBinOpA b1 s1
+      | UnaOpB(_,_) -> evalUnaOpB b1 s1)
+    and evalBinOpB = fun b -> fun s1 ->
+      (match b with
+      | BinOpB(op, b1, b2) ->
+         (match op with
+          | OOr -> ((evalBExp b1 s1) || (evalBExp b2 s1))
+          | OAnd ->  ((evalBExp b1 s1) && (evalBExp b2 s1)))
+      | _ -> raise WrongPrintFunc)
+    and evalUnaOpB = fun b -> fun s1 ->
+      (match b with
+      | UnaOpB (op, b1) ->
+         (match op with
+          | ONeg ->  if ((evalBExp b1 s1) = true) then true else false)
+      | _ -> raise WrongPrintFunc)
+    and evalBinOpA = fun b -> fun s1 ->
+      (match b with
+      | BinOpA(op, aENT1, aENT2) ->
+         (match op with
+          | OEqual -> if ((Ar.evalAExp aENT1 s1) = (Ar.evalAExp aENT2 s1)) then true else false
+          | OLeq ->  if ((Ar.evalAExp aENT1 s1) = (Ar.evalAExp aENT2 s1)) then true else false
+          | OGeq -> if ((Ar.evalAExp aENT1 s1) = (Ar.evalAExp aENT2 s1)) then true
+                    else false
+          | OGtn ->if ((Ar.evalAExp aENT1 s1) = (Ar.evalAExp aENT2 s1)) then true
+                   else false
+          | OLtn ->  if ((Ar.evalAExp aENT1 s1) = (Ar.evalAExp aENT2 s1)) then true
+                     else false)
+      | _ -> raise WrongPrintFunc)
+    
+    
+
 
   end

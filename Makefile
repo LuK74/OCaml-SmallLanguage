@@ -41,25 +41,25 @@ $(OBJ_DIR)/analyseurLexicale.cmi : $(LIB_DIR)/analyseurLexicale.mli
 $(OBJ_DIR)/arithExp.cmi : $(LIB_DIR)/arithExp.mli
 	$(CC) -c $(FLAGS) $< -I $(OBJ_DIR)/ -o $@
 	
-$(OBJ_DIR)/boolExp.cmi : $(LIB_DIR)/boolExp.mli
+$(OBJ_DIR)/boolExp.cmi : $(LIB_DIR)/boolExp.mli 
 	$(CC) -c $(FLAGS) $< -I $(OBJ_DIR)/ -o $@
 	
-$(OBJ_DIR)/config.cmo : $(SRC_DIR)/config.ml $(OBJ_DIR)/config.cmi $(OBJ_DIR)/state.cmo
+$(OBJ_DIR)/config.cmo : $(SRC_DIR)/config.ml $(OBJ_DIR)/config.cmi $(OBJ_DIR)/analyseurSyntaxique.cmo
 	$(CC) -c $(FLAGS) $< -I $(OBJ_DIR)/ -o $@
 	
 $(OBJ_DIR)/state.cmo : $(SRC_DIR)/state.ml $(OBJ_DIR)/state.cmi
 	$(CC) -c $(FLAGS) $< -I $(OBJ_DIR)/ -o $@
 
-$(OBJ_DIR)/analyseurSyntaxique.cmo : $(SRC_DIR)/analyseurSyntaxique.ml $(OBJ_DIR)/analyseurSyntaxique.cmi
+$(OBJ_DIR)/analyseurSyntaxique.cmo : $(SRC_DIR)/analyseurSyntaxique.ml $(OBJ_DIR)/analyseurSyntaxique.cmi $(OBJ_DIR)/boolExp.cmo $(OBJ_DIR)/analyseurLexicale.cmo
 	$(CC) -c $(FLAGS) $< -I $(OBJ_DIR)/ -o $@
 
-$(OBJ_DIR)/analyseurLexicale.cmo : $(SRC_DIR)/analyseurLexicale.ml $(OBJ_DIR)/analyseurLexicale.cmi
+$(OBJ_DIR)/analyseurLexicale.cmo : $(SRC_DIR)/analyseurLexicale.ml $(OBJ_DIR)/analyseurLexicale.cmi 
 	$(CC) -c $(FLAGS) $< -I $(OBJ_DIR)/ -o $@
 	
 $(OBJ_DIR)/arithExp.cmo : $(SRC_DIR)/arithExp.ml $(OBJ_DIR)/arithExp.cmi
 	$(CC) -c $(FLAGS) $< -I $(OBJ_DIR)/ -o $@
 	
-$(OBJ_DIR)/boolExp.cmo : $(SRC_DIR)/boolExp.ml $(OBJ_DIR)/boolExp.cmi
+$(OBJ_DIR)/boolExp.cmo : $(SRC_DIR)/boolExp.ml $(OBJ_DIR)/boolExp.cmi $(OBJ_DIR)/arithExp.cmo $(OBJ_DIR)/state.cmo
 	$(CC) -c $(FLAGS) $< -I $(OBJ_DIR)/ -o $@
 
 clean :
