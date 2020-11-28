@@ -195,5 +195,3 @@ let str5 = "a :=1 ;
             }"
 let res5 = automatedTest str5
 
-let str6 = "a := #; if (a) { c := 1 } else { d := 1 }"
-let res6 = automatedTest str6
