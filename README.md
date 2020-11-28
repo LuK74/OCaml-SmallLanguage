@@ -20,14 +20,14 @@ https://www.overleaf.com/4185181216ykhccbpvsvvx
 =, <, <=, >=, >, ||, &&, ! are available
    
 - While : 
-```pascal
+```c
     while (id = 1) {
         id2 := id2 + 1
     }   
 ```
    
 - If : 
-```pascal
+```c
     if (id = 1) {
         id2 := true
     } else {
@@ -37,7 +37,7 @@ https://www.overleaf.com/4185181216ykhccbpvsvvx
    
 - Int operators :
 +, -, *, / are available (operations priority are not implemented yet, it'll starts from the right)
-```pascal
+```c
     id := 1 + 2 * 3 - 4
 ```
 Id will be equal to -1 (1 + 2 * (-1) --> 1 + (-2) --> -1)
