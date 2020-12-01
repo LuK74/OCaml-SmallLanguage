@@ -19,14 +19,20 @@ module Config =
       fun s ->
       match instr with
       | A.Assign(c,ope) -> (match ope with
-                                 | A.Hash -> print_string "Not yet implemented !\n"; s
-                                 | A.AExp(ae1) -> (let res = (Ar.evalAExp ae1 s) in
-                                                  let newVal = (S.VEnt(res)) in
-                                                  (S.modify_var c newVal s))
-                                 | A.BExp(be1) -> (let res = (Bo.evalBExp be1 s) in
-                                                   let newVal = (S.VBool(res)) in
-                                                   S.modify_var c newVal s)
-                                 | A.Var(v) -> S.modify_var c (S.read_var v s) s)
+                            | A.Hash -> (let res = (S.read_var c s) in
+                                         (match res with
+                                          | S.VEnt(k) -> (S.modify_var c (S.VEnt(-k)) s)
+                                          | S.VFloat(k) -> (S.modify_var c (S.VFloat(-.k)) s)
+                                          | S.VBool(k) -> (match k with
+                                                           | true -> (S.modify_var c (S.VBool(false)) s)
+                                                           | false -> (S.modify_var c (S.VBool(true)) s))))
+                            | A.AExp(ae1) -> (let res = (Ar.evalAExp ae1 s) in
+                                              let newVal = (S.VEnt(res)) in
+                                              (S.modify_var c newVal s))
+                            | A.BExp(be1) -> (let res = (Bo.evalBExp be1 s) in
+                                              let newVal = (S.VBool(res)) in
+                                              S.modify_var c newVal s)
+                            | A.Var(v) -> S.modify_var c (S.read_var v s) s)
       | _ -> raise InstrNotAssign
 
 

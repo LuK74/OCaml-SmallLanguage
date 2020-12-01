@@ -7,7 +7,7 @@ MKDIR = mkdir
 CC = ocamlc
 FLAGS = -g
 
-all : directories analyser
+all : directories analyser analyserN endMsg
 
 directories : $(OBJ_DIR) $(BIN_DIR)
 
@@ -17,9 +17,18 @@ $(OBJ_DIR) :
 $(BIN_DIR) :
 	$(MKDIR) $(BIN_DIR)
 	
+endMsg :
+	@echo "Executables can be found in bin/ directory"
+	
 analyser : $(OBJ_DIR)/analyseurLexicale.cmo $(OBJ_DIR)/state.cmo $(OBJ_DIR)/arithExp.cmo $(OBJ_DIR)/boolExp.cmo $(OBJ_DIR)/analyseurSyntaxique.cmo $(OBJ_DIR)/config.cmo
 	@echo "Compiling analyser\n"
 	$(CC) $^ -o $(BIN_DIR)/$@
+	@echo "\n"
+	
+analyserN : $(OBJ_DIR)/analyseurLexicale.cmo $(OBJ_DIR)/state.cmo $(OBJ_DIR)/arithExp.cmo $(OBJ_DIR)/boolExp.cmo $(OBJ_DIR)/analyseurSyntaxique.cmo $(OBJ_DIR)/natural.cmo
+	@echo "Compiling analyserN\n"
+	$(CC) $^ -o $(BIN_DIR)/$@
+	@echo "\n"
 	
 lexical : $(OBJ_DIR)/analyseurLexical.cmo
 	@echo "Compiling lexical analyser\n"
@@ -27,6 +36,9 @@ lexical : $(OBJ_DIR)/analyseurLexical.cmo
     
 	
 $(OBJ_DIR)/config.cmi : $(LIB_DIR)/config.mli $(OBJ_DIR)/state.cmi
+	$(CC) -c $(FLAGS) $< -I $(OBJ_DIR)/ -o $@
+	
+$(OBJ_DIR)/natural.cmi : $(LIB_DIR)/natural.mli $(OBJ_DIR)/state.cmi
 	$(CC) -c $(FLAGS) $< -I $(OBJ_DIR)/ -o $@
 	
 $(OBJ_DIR)/state.cmi : $(LIB_DIR)/state.mli
@@ -45,6 +57,9 @@ $(OBJ_DIR)/boolExp.cmi : $(LIB_DIR)/boolExp.mli
 	$(CC) -c $(FLAGS) $< -I $(OBJ_DIR)/ -o $@
 	
 $(OBJ_DIR)/config.cmo : $(SRC_DIR)/config.ml $(OBJ_DIR)/config.cmi $(OBJ_DIR)/analyseurSyntaxique.cmo
+	$(CC) -c $(FLAGS) $< -I $(OBJ_DIR)/ -o $@
+	
+$(OBJ_DIR)/natural.cmo : $(SRC_DIR)/natural.ml $(OBJ_DIR)/natural.cmi $(OBJ_DIR)/analyseurSyntaxique.cmo
 	$(CC) -c $(FLAGS) $< -I $(OBJ_DIR)/ -o $@
 	
 $(OBJ_DIR)/state.cmo : $(SRC_DIR)/state.ml $(OBJ_DIR)/state.cmi

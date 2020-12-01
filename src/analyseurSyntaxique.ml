@@ -187,7 +187,8 @@ module AnalyseurSyntaxique =
           (p_V ++> fun a -> return (Var(a)))
         +|
           (p_C ++> fun a -> return (a))
-    (*+| terminal AL.THash +> return(Hash)*)
+        +|
+          (terminal AL.THash +> return(Hash))
 
 
     let rec p_S : (instr, AL.token) ranalist = fun l ->
