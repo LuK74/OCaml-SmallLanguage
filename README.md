@@ -42,6 +42,9 @@ https://www.overleaf.com/4185181216ykhccbpvsvvx
 ```
 Id will be equal to -1 (1 + 2 * (-1) --> 1 + (-2) --> -1)
    
+[UPDATE] : Parenthesis have been add, BUT we have to surround each operation between 2 expressions  
+Example : 1 + 2 * 3 - 4 ========> (1 + ((2 * 3) - 4))   
+But now operations priorities are respected.
 
 
 ## How to use
