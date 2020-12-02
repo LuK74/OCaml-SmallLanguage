@@ -32,7 +32,8 @@ module Config =
                             | A.BExp(be1) -> (let res = (Bo.evalBExp be1 s) in
                                               let newVal = (S.VBool(res)) in
                                               S.modify_var c newVal s)
-                            | A.Var(v) -> S.modify_var c (S.read_var v s) s)
+                            | A.Var(v) -> S.modify_var c (S.read_var v s) s
+                            | _ -> raise InstrNotAssign)
       | _ -> raise InstrNotAssign
 
 
@@ -157,29 +158,29 @@ let res1 = automatedTest str1*)
 let str2 = "a:=1;b:=1;c:=1;d:=1"
 let res2 = automatedTest str2
 
-let str3 = "a:=1;b:=1;if(b = a) { b := 2 } else { a := 2}"
+let str3 = "a:=1;b:=1;if((b = a)) { b := 2 } else { a := 2}"
 let res3 = automatedTest str3
 
 let str4 = "b:=1;a:=1;if(a){c:=0}else{c:=1};if(b){d:=b}else{d:=0}"
 let res4 = automatedTest str4
 
-let str5 = "a:=1;b:=5;c:=0;while(a) { c:= c + 1; if (c = 5) { a:= 0 } else { }}"
+let str5 = "a:=1;b:=5;c:=0;while(a) { c:= (c + 1); if ((c = 5)) { a:= 0 } else { }}"
 let res5 = automatedTest str5
 
 let str6 = "a:=1;while(a) { if (a) { a:= 0 } else{a:=0}; d:=3}"
 let res6 = automatedTest str6
 
 let str7 = "a:=0 ; b:=5; c:= 0;
-            if (a = c) {
-              c := a + 100
+            if ((a = c)) {
+              c := ((a + 100))
             } else {
-              a := c + 200
+              a := ((c + 200))
             };
-            while (b = 5) {
+            while ((b = 5)) {
               b := 0
             };
-            c := c - 50;
-            a := a - b;
+            c := ((c - 50));
+            a := ((a - b));
             b := 0;
             d := 3333;
             w := true;
@@ -201,3 +202,4 @@ let str5 = "a :=1 ;
             }"
 let res5 = automatedTest str5
 
+let _ = print_string "\n";

@@ -9,7 +9,7 @@ module Bo = BoolExp
 module AnalyseurSyntaxique =
   struct
     type var = string
-    type exp = AExp of Ar.aExp | BExp of Bo.boolExp | Var of var | Hash
+    type exp = AExp of Ar.aExp | BExp of Bo.boolExp | Var of var | Hash | EmptyExp
 
 
     type instr = Assign of var * exp
@@ -27,6 +27,7 @@ module AnalyseurSyntaxique =
       | AExp(ae1) -> Ar.printAExp ae1
       | BExp(be1) -> Bo.printBExp be1
       | Hash -> print_char '#'
+      | EmptyExp -> print_string " "
  
 
     let rec print_instr = fun i ->
@@ -83,6 +84,7 @@ module AnalyseurSyntaxique =
       | Cons(AL.ValueFLOAT(k), l1) -> let (var, suite) =  p_C l in (var, suite)
       | _ -> raise (Echec ("Exp attendu ", l))
 
+    
     let p_OpeA : (Ar.ope, AL.token) ranalist = fun l ->
       match l() with
       | Cons(AL.TPlus, l1) -> (Ar.APlus,l1)
@@ -125,7 +127,7 @@ module AnalyseurSyntaxique =
         +|
           (p_C ++> fun a -> (match a with
                              | AExp(a1) -> return(AExp(a1))
-                             | _ -> raise (Echec ("INT CONST requested\n", l))))                            
+                             | _ -> raise (Echec ("INT CONST requested\n", l))))
     and p_BExp : (exp, AL.token) ranalist = fun l ->
       l |>
         (p_OpeBinA ++> fun op ->  p_Op ++> fun b ->
@@ -145,8 +147,6 @@ module AnalyseurSyntaxique =
                              | _ -> raise (Echec ("BOOL requested\n", l))))
         +|
           (p_V ++> fun a -> return (BExp(Bo.VaB(a))))
-    (* +|
-          p_AExp ++> fun a -> terminal AL.TEgale +> p_AExp ++> fun b -> return (Bo.EqualB(a,b)))*)
 
     and p_Op : (exp, AL.token) ranalist = fun l ->
       l |>
@@ -191,6 +191,81 @@ module AnalyseurSyntaxique =
           (terminal AL.THash +> return(Hash))
 
 
+    let rec p_T : (exp , AL.token) ranalist = fun l ->
+      l |>
+        (terminal AL.TParouv +> p_E ++> fun b -> terminal AL.TParfer +> return (b))                      
+        +|
+          (terminal AL.TParouv +> p_E ++> fun b -> terminal AL.TParfer +> return (b))
+        +|
+          (p_OpeUnaB ++> fun op -> p_Op ++> fun a -> match a with
+                                                     | Var(k) -> return (BExp(Bo.UnaOpB(op, Bo.VaB(k))))
+                                                     | BExp(k) -> return (BExp(Bo.UnaOpB(op, k)))
+                                                     | _ -> raise (Echec ("Type error", l)))
+        +|
+          (p_V ++> fun a -> return (Var(a)))
+        +|
+          (p_C ++> fun a -> return (a))
+        +|
+          (terminal AL.THash +> return(Hash))
+    and p_E : (exp, AL.token) ranalist = fun l ->
+      l |>
+        (p_T ++> fun a ->
+                 p_AExp ++> fun b ->
+                            (match a, b with
+                             | (BExp(_), _) -> raise (Echec ("Type error", l))
+                             | (Var(s), AExp(Ar.BinOpENT(op, _, a2))) -> return (AExp( Ar.BinOpENT(op, Ar.VaENT(s) ,a2)))
+                             | (AExp(l),AExp(Ar.BinOpENT(op, _, r))) -> return (AExp(Ar.BinOpENT(op,l,r)))
+                             | (AExp(l),EmptyExp) -> return (AExp(l))
+                             | _ -> raise (Echec ("Syntax error", l))))
+    
+        +|
+          (p_T ++> fun a ->
+                   p_BExp ++> fun b ->
+                              (match a,b with
+                               | (Var(s),BExp(Bo.BinOpA(op, _, r))) -> return (BExp(Bo.BinOpA(op,  Ar.VaENT(s), r)))
+                               | (Var(s),BExp(Bo.BinOpB(op, _, r))) -> return (BExp(Bo.BinOpB(op, Bo.VaB(s), r)))
+                               | (BExp(l),BExp(Bo.BinOpB(op, _, r))) -> return (BExp(Bo.BinOpB(op,l,r)))
+                               | (AExp(l),BExp(Bo.BinOpA(op, _, r))) -> return (BExp(Bo.BinOpA(op,l,r)))
+                               | _ -> raise (Echec ("Syntax error", l))))                                                   
+    and p_AExp : (exp, AL.token) ranalist = fun l ->
+      l |>
+        (p_OpeA ++> fun op ->
+                    p_T ++> fun b ->
+                            p_AExp ++> fun c ->
+                                       (match b,c with
+                                        | (Var(s), EmptyExp) -> return (AExp(Ar.BinOpENT(op, Ar.CoENT(0), Ar.VaENT(s))))
+                                        | (Var(s), AExp(Ar.BinOpENT(op2, _, a2))) -> return (AExp(Ar.BinOpENT(op, Ar.CoENT(0) , Ar.BinOpENT(op, Ar.VaENT(s) ,a2))))
+                                        | (AExp(a), EmptyExp) -> return (AExp(Ar.BinOpENT(op, Ar.CoENT(0), a)))
+                                        | (AExp(a1), AExp(Ar.BinOpENT(op2, _, a2))) -> return (AExp(Ar.BinOpENT(op, Ar.CoENT(0) , Ar.BinOpENT(op, a1 ,a2))))
+                                        | _ -> raise (Echec ("Syntax error", l))))
+        +|
+          (return (EmptyExp))
+    and p_BExp : (exp, AL.token) ranalist = fun l ->
+      l |>
+        (p_OpeBinA ++> fun op ->
+                       p_T ++> fun b ->
+                               p_AExp ++> fun c ->
+                                          (match b,c with
+                                           | (Var(s), EmptyExp) -> return (BExp(Bo.BinOpA(op, Ar.CoENT(0), Ar.VaENT(s))))
+                                           | (Var(s) , AExp(Ar.BinOpENT(op2, _, r))) -> return (BExp(Bo.BinOpA(op, Ar.CoENT(0), Ar.VaENT(s))))
+                                           | (AExp(a), EmptyExp) -> return (BExp(Bo.BinOpA(op, Ar.CoENT(0), a)))
+                                           | (AExp(l),AExp(Ar.BinOpENT(op2, _, r))) -> return (BExp(Bo.BinOpA(op, Ar.CoENT(0), Ar.BinOpENT(op2,l,r))))
+                                           | _ -> raise (Echec("Syntax error\n", l))))
+        +|
+          (p_OpeBinB ++> fun op ->
+                         p_T ++> fun b ->
+                                 p_BExp ++> fun c ->
+                                            (match b,c with
+                                             | (Var(s), EmptyExp) -> return (BExp(Bo.BinOpB(op, Bo.CoB(true), Bo.VaB(s))))
+                                             | (Var(s) , BExp(Bo.BinOpB(op2, _, r))) -> return (BExp(Bo.BinOpB(op, Bo.CoB(true), Bo.VaB(s))))
+                                             | (BExp(a), EmptyExp) -> return (BExp(Bo.BinOpB(op, Bo.CoB(true), a)))
+                                             | (BExp(l),BExp(Bo.BinOpB(op2, _, r))) -> return (BExp(Bo.BinOpB(op, Bo.CoB(true), Bo.BinOpB(op2,l,r))))
+                                             | _ -> raise (Echec("Syntax error\n", l))))
+        +|
+          (return (EmptyExp))
+
+
+
     let rec p_S : (instr, AL.token) ranalist = fun l ->
       l |>
         (p_I ++> fun a -> p_L ++> fun b -> return (Seq(a,b)))
@@ -201,17 +276,17 @@ module AnalyseurSyntaxique =
         +| return Skip
     and p_I : (instr, AL.token) ranalist = fun l ->
       l |>
-        (terminal AL.TIf +> terminal AL.TParouv +> p_Op ++>
+        (terminal AL.TIf +> terminal AL.TParouv +> p_T ++>
            fun a -> terminal AL.TParfer +> terminal AL.TAccouv +> p_S ++>
                       fun b -> terminal AL.TAccfer +> terminal AL.TElse +> terminal AL.TAccouv +>
                                  p_S ++> fun c -> terminal AL.TAccfer +>
                                                     return (If(a,b,c)))
         +|
-          (terminal AL.TWhile +> terminal AL.TParouv +> p_Op ++>
+          (terminal AL.TWhile +> terminal AL.TParouv +> p_T ++>
              fun a -> terminal AL.TParfer +> terminal AL.TAccouv +> p_S ++>
                         fun b -> terminal AL.TAccfer +> return (While(a,b)))
         +|
-          (p_V ++> fun a -> terminal AL.TAffec +> p_Op ++>
+          (p_V ++> fun a -> terminal AL.TAffec +> p_T ++>
                               fun b -> (return (Assign(a,b))))
         +|
           (return Skip)
