@@ -12,6 +12,9 @@ https://ltpf.gricad-pages.univ-grenoble-alpes.fr/commun/projet/sos.pdf
 https://www.overleaf.com/4185181216ykhccbpvsvvx
 
 ## Our language
+[NEED TO BE REVIEWED] : Config, is it better to use two types, Inter and Final or just one type is enough ? 
+
+
 - Affectation :   
 ```pascal
     id := 1
