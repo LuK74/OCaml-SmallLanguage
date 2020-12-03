@@ -1,7 +1,10 @@
 module State :
 sig
   (* type représentant un state *)
+
+  (* permet de représenter plusieurs types de valeur *)
   type value
+  (* Contenu en mémoire, nom variable et valeur associé *)
   type state
 
   (* fonction utile pour state *)

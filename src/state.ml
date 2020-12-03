@@ -1,25 +1,39 @@
 module State =
   struct
-    (* 'c identifier, 'a : value, state : suite du state *)
+
+    (* VEnt : Valeur entière 
+       VFloat : Valeur float (not used)
+       VBool : Valeur Booléenne *)
     type value =
       | VEnt of int
       | VFloat of float
       | VBool of bool
-    
+
+    (* EOS : End Of State 
+
+       string : Identificateur
+       value : Valeur associée
+       state : Suite du state *)
     type state =
       | EOS
       | State of (string * value * state)
 
+    (* Créer un state vide *)
     let create_state =
       EOS
 
+    (* Remplir avec des valeur entière 0
+       Pour chaque identificateur présent dans un state *)      
     let rec init_state = fun s ->
       match s with
       | State(id, value, suite) -> State(id, VEnt(0), (init_state suite))
       | EOS -> s
 
     exception VarNotFound of string * state
-    
+
+    (* Permet de lire une variable dans un state
+       Envoie une exception VarNotFound si la variable
+       n'est pas trouvé *)
     let rec read_var = fun id ->
       fun s ->
       match s with
@@ -27,6 +41,9 @@ module State =
                                     else read_var id suite
       | EOS -> raise (VarNotFound (id,s))
 
+    (* Modifie la valeur d'une variable 
+       OU 
+       l'ajoute en fin de state si elle n'existe pas *)
     let rec modify_var = fun id ->
       fun newVal ->
       fun s ->
@@ -35,28 +52,21 @@ module State =
                                     else State(id0, value, (modify_var id newVal suite))
       | EOS -> State(id, newVal, EOS)
 
-    exception ComputeHashWentWrong
-    let computeHash = fun value ->
-      match value with
-      | 0 -> 1
-      | 1 -> 0
-      | _ -> raise ComputeHashWentWrong
 
-        exception InstrNotAssign
-
-        let print_value = fun v ->
-          match v with
-          | VEnt(k) -> print_int k
-          | VFloat(k) -> print_float k
-          | VBool(k) -> if (k = true) then print_string "true" else print_string "false"
-        
+    (* Fonction d'affichage *)
+    let print_value = fun v ->
+      match v with
+      | VEnt(k) -> print_int k
+      | VFloat(k) -> print_float k
+      | VBool(k) -> if (k = true) then print_string "true" else print_string "false"
+    
     let rec print_state = fun s ->
       match s with
       | State(id0, value, suite) ->
          print_string id0; print_string " : "; print_value value;
          print_string " | "; print_state suite
       | EOS -> print_string "\n"
-   
+    
 
 end
 

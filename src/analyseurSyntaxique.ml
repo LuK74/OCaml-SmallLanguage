@@ -8,16 +8,18 @@ module Bo = BoolExp
 
 module AnalyseurSyntaxique =
   struct
+    (* Utilisé pour l'interprêteur *)
     type var = string
     type exp = AExp of Ar.aExp | BExp of Bo.boolExp | Var of var | Hash | EmptyExp
 
-
+    (* Utilisé pour représenter une instruction *)
     type instr = Assign of var * exp
                | If of exp * instr * instr
                | While of exp * instr
                | Seq of instr * instr
                | Skip
 
+    (* Fonction d'affichage utilisé pour le debug *)
     let print_var = fun v ->
       print_string v
 
@@ -62,12 +64,17 @@ module AnalyseurSyntaxique =
     let return : 'r -> ('r, 't) ranalist =
       fun x l -> (x, l)
 
+
+    (* --------------------------------------------------- Attention ---------------------------------------------------------- *)
+    (* ------------- Cette partie doit-être revu, il est possible de l'améliorer et de produire un meilleur code -------------- *)
+    
+    (* Parse un Identifier *)
     let p_V : (var, AL.token) ranalist = fun l ->
       match l() with
       | Cons(AL.Identifier(s), l1) -> (s, l1)
       | _ -> raise (Echec ("Var attendu, a,b,c ou d ", l))
 
-
+    (* Parse une constante *)
     let p_C : (exp, AL.token) ranalist = fun l ->
       match l() with
       | Cons(AL.ValueENT(k), l1) -> (AExp(Ar.CoENT(k)), l1)
@@ -75,7 +82,7 @@ module AnalyseurSyntaxique =
       | Cons(AL.ValueFLOAT(k), l1) -> (AExp(Ar.CoENT(1)), l1) (* not yet implemented *)
       | _ -> raise (Echec ("Const attendu, 0 ou 1 ", l))
 
-
+    (* Parse un Identifier ou une constante *)
     let p_E : (exp, AL.token) ranalist = fun l ->
       match l() with
       | Cons(AL.Identifier(s), l1) -> let (var,suite) = p_V l in ((Var(var),suite))
@@ -84,7 +91,7 @@ module AnalyseurSyntaxique =
       | Cons(AL.ValueFLOAT(k), l1) -> let (var, suite) =  p_C l in (var, suite)
       | _ -> raise (Echec ("Exp attendu ", l))
 
-    
+    (* Parse les opérateurs d'opération arithmétique *)
     let p_OpeA : (Ar.ope, AL.token) ranalist = fun l ->
       match l() with
       | Cons(AL.TPlus, l1) -> (Ar.APlus,l1)
@@ -94,12 +101,14 @@ module AnalyseurSyntaxique =
       | Cons(AL.TModulo, l1) -> (Ar.AModulo,l1)
       | _ -> raise (Echec ("Syntax error\n", l))
 
+    (* Parse les opérateurs binaires d'opération booléenne sur des booléens *)
     let p_OpeBinB : (Bo.opeBinB, AL.token) ranalist = fun l ->
       match l() with
       | Cons(AL.TOr, l1) -> (Bo.OOr, l1)
       | Cons(AL.TAnd, l1) -> (Bo.OAnd, l1)
       | _ -> raise (Echec ("Syntax error\n", l))
 
+    (* Parse les opérateurs binaires d'opération booléenne sur des expressions arithmétique *)
     let p_OpeBinA : (Bo.opeBinA, AL.token) ranalist = fun l ->
       match l() with
       | Cons(AL.TEgale, l1) -> (Bo.OEqual, l1)
@@ -109,95 +118,20 @@ module AnalyseurSyntaxique =
       | Cons(AL.TLtn, l1) -> (Bo.OLtn, l1)
       | _ -> raise (Echec ("Syntax error\n", l))
 
+        (* Parse les opérateurs unaires d'opération booléenne sur des booléens *)
     let p_OpeUnaB : (Bo.opeUnaB, AL.token) ranalist = fun l ->
       match l() with
       | Cons(AL.TNegat, l1) -> (Bo.ONeg, l1)
       | _ -> raise (Echec ("Syntax error\n", l))
 
-    (* ameliorable *)
-    (* recursive à gauche , on commence par les constantes et var pour éviter récursion infini*)
-    let rec p_AExp : (exp, AL.token) ranalist = fun l ->
-      l |>
-        (p_OpeA ++> fun op -> p_Op ++> fun b -> (match b with
-                                                 | Var(s) -> return (AExp(Ar.BinOpENT(op, Ar.CoENT(0),Ar.VaENT(s))))
-                                                 | AExp(a) -> return (AExp(Ar.BinOpENT(op, Ar.CoENT(0), a)))
-                                                 | _ -> raise (Echec ("Syntax error", l))))
-        +|
-          (p_V ++> fun a -> return(AExp(Ar.VaENT(a))))
-        +|
-          (p_C ++> fun a -> (match a with
-                             | AExp(a1) -> return(AExp(a1))
-                             | _ -> raise (Echec ("INT CONST requested\n", l))))
-    and p_BExp : (exp, AL.token) ranalist = fun l ->
-      l |>
-        (p_OpeBinA ++> fun op ->  p_Op ++> fun b ->
-                                        match b with
-                                        | AExp(a) -> return (BExp(Bo.BinOpA(op, Ar.CoENT(0), a)))
-                                        | Var(s) -> return (BExp(Bo.BinOpA(op, Ar.CoENT(0), Ar.VaENT(s))))
-                                        | _ -> raise (Echec("Syntax error\n", l)))
-        +|
-          (p_OpeBinB ++> fun op -> p_Op ++> fun b ->
-                                            match b with
-                                            | BExp(b) -> return (BExp(Bo.BinOpB(op, Bo.CoB(true), b)))
-                                            | Var(s) -> return (BExp(Bo.BinOpB(op, Bo.CoB(true), Bo.VaB(s))))
-                                            | _ -> raise (Echec("Syntax error\n", l)))
-        +|
-          (p_C ++> fun a -> (match a with
-                             | BExp(b) -> return (BExp(b))
-                             | _ -> raise (Echec ("BOOL requested\n", l))))
-        +|
-          (p_V ++> fun a -> return (BExp(Bo.VaB(a))))
-
-    and p_Op : (exp, AL.token) ranalist = fun l ->
-      l |>
-        (p_C ++> fun a -> p_AExp ++>
-                            fun b ->
-                            (match a,b with
-                             | (BExp(_), _) -> raise (Echec ("Type error", l))
-                             | (AExp(Ar.VaENT(_)), _) -> raise (Echec ("Syntax error", l))
-                             | (AExp(l),AExp(Ar.BinOpENT(op,_, r))) -> return (AExp(Ar.BinOpENT(op,l,r)))
-                             | _ -> raise (Echec ("Syntax error", l))))
-        +|
-          (p_V ++> fun a -> p_AExp ++>
-                              fun b ->
-                              (match b with
-                               | AExp(Ar.BinOpENT(op,_, r)) -> return (AExp(Ar.BinOpENT(op,Ar.VaENT(a),r)))
-                               | _ -> raise (Echec ("Syntax error", l))))                            
-        +|
-          (p_C ++> fun a -> p_BExp ++>
-                              fun b ->
-                              (match a,b with
-                               | (BExp(l),BExp(Bo.BinOpB(op, _, r))) -> return (BExp(Bo.BinOpB(op,l,r)))
-                               | (AExp(l),BExp(Bo.BinOpA(op, _, r))) -> return (BExp(Bo.BinOpA(op,l,r)))
-                               | (AExp(_), _) -> raise (Echec ("Type error", l))
-                               | _ -> raise (Echec ("Syntax error", l))))
-        +|
-          (p_V ++> fun a -> p_BExp ++>
-                              fun b ->
-                              (match b with
-                               | BExp(Bo.BinOpB(op,_, r)) -> return (BExp(Bo.BinOpB(op,Bo.VaB(a),r)))
-                               | BExp(Bo.BinOpA(op, _, r)) -> return (BExp(Bo.BinOpA(op,Ar.VaENT(a),r)))
-                               | _ -> raise (Echec ("Syntax error", l))))
-        +|
-          (p_OpeUnaB ++> fun op -> p_Op ++> fun a -> match a with
-                                                   | Var(k) -> return (BExp(Bo.UnaOpB(op, Bo.VaB(k))))
-                                                   | BExp(k) -> return (BExp(Bo.UnaOpB(op, k)))
-                                                   | _ -> raise (Echec ("Type error", l)))
-        +|
-          (p_V ++> fun a -> return (Var(a)))
-        +|
-          (p_C ++> fun a -> return (a))
-        +|
-          (terminal AL.THash +> return(Hash))
-
-
+    (* Inspiré de grammare donné dans l'enoncé de l'extensions 3.2 *)
     let rec p_T : (exp , AL.token) ranalist = fun l ->
       l |>
-        (terminal AL.TParouv +> p_E ++> fun b -> terminal AL.TParfer +> return (b))                      
+        (terminal AL.TParouv +> p_Exp ++> fun b -> terminal AL.TParfer +> return (b))                      
         +|
-          (terminal AL.TParouv +> p_E ++> fun b -> terminal AL.TParfer +> return (b))
+          (terminal AL.TParouv +> p_Exp ++> fun b -> terminal AL.TParfer +> return (b))
         +|
-          (p_OpeUnaB ++> fun op -> p_Op ++> fun a -> match a with
+          (p_OpeUnaB ++> fun op -> p_T ++> fun a -> match a with
                                                      | Var(k) -> return (BExp(Bo.UnaOpB(op, Bo.VaB(k))))
                                                      | BExp(k) -> return (BExp(Bo.UnaOpB(op, k)))
                                                      | _ -> raise (Echec ("Type error", l)))
@@ -207,7 +141,7 @@ module AnalyseurSyntaxique =
           (p_C ++> fun a -> return (a))
         +|
           (terminal AL.THash +> return(Hash))
-    and p_E : (exp, AL.token) ranalist = fun l ->
+    and p_Exp : (exp, AL.token) ranalist = fun l ->
       l |>
         (p_T ++> fun a ->
                  p_AExp ++> fun b ->
@@ -265,7 +199,11 @@ module AnalyseurSyntaxique =
           (return (EmptyExp))
 
 
+        (* --------------------------------------------------------------- ---------------------------------------------------------- *)
 
+    
+
+    (* Grammaire principale de notre langage *)
     let rec p_S : (instr, AL.token) ranalist = fun l ->
       l |>
         (p_I ++> fun a -> p_L ++> fun b -> return (Seq(a,b)))
@@ -292,19 +230,14 @@ module AnalyseurSyntaxique =
           (return Skip)
 
 
-    
+   
+    (* Genére une mylist à partir d'un string *)
     let list_of_string s =
       let rec boucle s i n = fun () ->
         if i = n then AL.Nil  else (AL.Cons(s.[i], (boucle s (i+1) n )))
       in boucle s 0 (String.length s)
 
-
-    let rec convertLazyToRegular = fun (l : 't AL.mylist) -> fun regular ->
-                                                             match l() with
-                                                             | AL.Nil -> regular
-                                                             | AL.Cons(a,l1) -> convertLazyToRegular l1 (regular@[a])
-
-
+    (* Parse une mylist de token pour genére l'AST *)
     let ast_parser_func = fun (s1 : 't AL.mylist) ->
       (let parsed_string = p_S s1 in
        match parsed_string with

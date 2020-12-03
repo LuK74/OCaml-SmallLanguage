@@ -7,7 +7,10 @@ module Ar = ArithExp
 module BoolExp =
   struct
 
-    
+    (* Ces 3 types représentant les opérateurs d'une expression pouvant renvoyant
+       une booléen *)
+
+    (* Opérateur de comparaison entre expressions arithmétiques *)
     type opeBinA =
       | OEqual
       | OLeq
@@ -15,16 +18,18 @@ module BoolExp =
       | OGtn
       | OLtn
 
+    (* Opérateur booléen binaire *)
     type opeBinB =
       | OOr
       | OAnd
 
+    (* Opérateur booléen unaire *)
     type opeUnaB =
       | ONeg
 
-    type ope = BinaryBool of opeBinB | BinaryArith of opeBinA | UnaryBool of opeUnaB
-
-    
+    (* CoB : constante booléenne
+       VaB : variable booléenne 
+       BinOpB, BinOpA, UnaOpB décrit au-dessus *)
     type boolExp =
       | CoB of bool
       | VaB of string
@@ -68,6 +73,7 @@ module BoolExp =
       | _ -> raise WrongPrintFunc
 
 
+    (* Evaluation d'une expression booléenne *)
     let rec evalBExp = fun b1 -> fun s1 ->
       (match b1 with
       | CoB (k) -> k

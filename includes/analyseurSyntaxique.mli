@@ -10,16 +10,13 @@ module AnalyseurSyntaxique :
 sig
   (* Type utilisé pour les token de l'AST *)
   type var
-  type const
   type exp
-  type ope
+  
   type instr
 
   val print_instr : instr
 
   (* Type utilisé pour l'analyse syntaxique *)
-  exception Echec
-  type 'a mylist
   type ('r, 't) ranalist
   type ('t) analist
   type ('x, 't) st
@@ -28,26 +25,30 @@ sig
   val (++>) : (('r, 't) ranalist) -> ('r -> ('x, 't) st) -> ('x, 't) st
   val (+|) : (('x, 't) st) -> (('x, 't) st) -> ('x, 't) st
 
-  val terminal : 't -> 't mylist -> 't mylist
-  val return : 'r -> 't mylist -> ('r * 't mylist)
+  val terminal : 't -> 't AL.mylist -> 't AL.mylist
+  val return : 'r -> 't AL.mylist -> ('r * 't AL.mylist)
 
-  val p_V : (var, 't) ranalist
-  val p_C : (const, 't) ranalist
-  val p_E : (exp ,'t) ranalist
+  val p_V : (var, AL.token) ranalist
+  val p_C : (exp, AL.token) ranalist
+  val p_E : (exp, AL.token) ranalist
 
-  val p_If : 't -> 't mylist -> 't mylist
-  val p_While : 't -> 't mylist -> 't mylist
+  val p_OpeA : (Ar.ope, AL.token) ranalist
+  val p_OpeBinB : (Bo.opeBinB, AL.token) ranalist
+  val p_OpeBinA : (Bo.opeBinA, AL.token) ranalist
+  val p_OpeUnaB : (Bo.opeUnaB, AL.token) ranalist
   
   val p_S : (instr, 't) ranalist
   val p_L : (instr, 't) ranalist
   val p_I : (instr, 't) ranalist
-  val p_Op : (ope, 't) ranalist
 
-  val p_AExp : (Ar.aExp, 't) ranalist
-  val p_BExp : (Bo.boolExp, 't) ranalist
-                        (* useful func for parsing *)
-  val list_of_string : string -> 't mylist
-  val ast_parser_func : 't mylist -> 'r
+  val p_AExp : (exp, AL.token) ranalist
+  val p_BExp : (exp, AL.token) ranalist
+  val p_T : (exp, AL.token) ranalist
+  val p_Exp : (exp, AL.token) ranalist
+  
+  (* useful func for parsing *)
+  val list_of_string : string -> 't AL.mylist
+  val ast_parser_func : 't AL.mylist -> 'r
   
   
 

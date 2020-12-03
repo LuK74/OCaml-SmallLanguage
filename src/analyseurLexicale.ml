@@ -1,24 +1,25 @@
 module AnalyseurLexicale =
   struct
-    (* Grammaire : 
-       ValueENT ::= Numb ValueENT | episilon
-       ValueFLOAT ::= Numb ValueFLOAT | '.' ValueENT | Epsilon
-       Id ::= Char Id | Epislon
-     *)
 
+    (* Correspond à une lazylist *)
     type 'a mylist = unit -> 'a contentsll
     and 'a contentsll = Nil | Cons of 'a * 'a mylist
 
+    (* Renvoie la valeur d'un entier représenté par un char *)
     let valueChar = fun c ->
       let valueC = Char.code c in
       (valueC - Char.code '0')    
 
+    (* Renvoie true si c est un chiffre
+       sinon renvoie false *)
     let isNumb = fun c ->
       let charCode = Char.code c in
       if (charCode > Char.code '9') then false
       else ((if (charCode < Char.code '0') then false
              else true))
-    
+
+    (* Renvoie true si c est un char alphabétique
+       sinon renvoie false *)
     let isChar = fun c ->
       let charCode = Char.code c in
       if (charCode > Char.code 'z') then false
@@ -27,19 +28,23 @@ module AnalyseurLexicale =
                   else (if (charCode >= Char.code 'A') then true
                         else false)))
 
+    (* Génere un string à partir
+       d'une mylist *)
     let rec string_of_list l =
       match l() with
       | Nil -> ""
       | Cons(c,l) -> String.make 1 c ^ string_of_list l
 
-    
+    (* Génere une mylist à partir
+       d'un string *)
     let list_of_string s =
       let rec boucle s i n = fun () ->
         if i = n then Nil  else (Cons(s.[i], (boucle s (i+1) n )))
       in boucle s 0 (String.length s)
 
     exception LexicalError of string
-    
+
+    (* Créer un nombre entier à partir d'une chaine de caractère *)
     let rec create_valueENT = fun tokenStr ->
       fun value ->
       if (String.length tokenStr > 0) then
@@ -47,7 +52,7 @@ module AnalyseurLexicale =
          if (isNumb c) then (create_valueENT (String.sub tokenStr 1 ((String.length tokenStr) - 1 )) (value * 10 + (Char.code c - (Char.code '0'))))
          else raise (LexicalError tokenStr))
       else value
-
+    
     let rec create_valueFLOAT = fun tokenStr ->
       raise (LexicalError "Not yet implemented\n")
 
@@ -57,15 +62,22 @@ module AnalyseurLexicale =
   type 't analist = 't mylist -> 't mylist
   type ('r, 't) ranalist = 't mylist -> 'r * 't mylist
 
+  (* Parse un terminal de la grammaire 
+     On vérifie que le char est bien
+     égale à c
+   *)
   let terminal c : 't analist = fun l ->
     match l() with
     | Cons(x, l) when x = c -> l
     | _ -> raise (LexicalParsingEchec "Wrong terminal\n")
-  
+
+  (* Parse un terminal de la grammaire 
+     sans vérifier qu'il correspond bien 
+     à un char attendu *)
   let anyterminal : ('t, 't) ranalist = fun l ->
     match l() with
     | Cons(x, l)  -> (x, l)
-    | _ -> raise (LexicalParsingEchec "Wrong terminal\n")
+    | _ -> raise (LexicalParsingEchec "Empty list\n")
 
   (* Analyseur correspondant à un non-terminal vide *)
   let epsilon : 't analist = fun l -> l
@@ -86,35 +98,42 @@ module AnalyseurLexicale =
   let (+|) (a : 't mylist -> 'x) (b : 't mylist -> 'x) : 't mylist -> 'x =
     fun l -> try a l with LexicalParsingEchec s -> b l
 
+  (* Version fourni de isNumb et isChar *)
   let lettre c = 
-  match c with
-  | 'a'..'z' | 'A'..'Z' -> c
-  | _ -> raise (LexicalParsingEchec "Not a letter\n")
+    match c with
+    | 'a'..'z' | 'A'..'Z' -> c
+    | _ -> raise (LexicalParsingEchec "Not a letter\n")
 
   let chiffre c =
     match c with
     | '0'..'9' -> c
     | _ -> raise  (LexicalParsingEchec "Not a number\n")
 
+  (* Parse une lettre *)
   let p_lettre : (char, char) ranalist =
     anyterminal ++> fun c -> return (lettre c)
 
+  (* Parse un chiffre *)
   let p_chiffre : (char, char) ranalist =
     anyterminal ++> fun c -> return (chiffre c)
 
+  (* Parse un chiffre ou lettre *)
   let p_alphanum : (char, char) ranalist =
     p_lettre +| p_chiffre
 
+  (* Parse une chaine de nombre et/ou char *)
   let rec p_alphanums : (char mylist, char) ranalist = fun l ->
     l |>
       (p_alphanum ++> fun a -> p_alphanums ++> fun la -> return (fun () -> (Cons(a, la))))
       +| (return (fun () -> Nil))
 
+  (* Parse un nombre *)
   let rec p_chiffres : (char mylist, char) ranalist = fun l ->
     l |>
       (p_chiffre ++> fun c -> p_chiffres ++> fun lc -> return (fun () -> (Cons(c, lc))))
       +| (return (fun() -> Nil))
-  
+
+  (* Liste des token *)
   type token =
     | TSkip
     | TWhile
@@ -144,7 +163,8 @@ module AnalyseurLexicale =
     | ValueFLOAT of float
     | ValueBOOL of bool
     | Identifier of string
-  
+
+  (* Affiche le string correspondant à un token *)
   let print_token = fun t ->
     match t with
     | TSkip -> print_string ""
@@ -176,7 +196,7 @@ module AnalyseurLexicale =
     | ValueBOOL(k) -> print_string (if (k = true) then "true" else "false")
     | Identifier(s) -> print_string s
 
-
+  (* Genére le token correspondant à la string donnée *)
     let create_token = fun tokenStr ->
     match tokenStr with
     | "" -> TSkip
@@ -212,7 +232,9 @@ module AnalyseurLexicale =
     | "False" -> ValueBOOL(false)
     | _ -> Identifier(tokenStr)
 
-
+    (* Parse n'importe quel type de token
+       Pour éviter les "mélanges" entre token similaire 
+       (Ex : ">=" et ">" ), on explicite certaines régles *)
     let p_token : (token, char) ranalist = fun l ->
       l |>
         (p_lettre ++> fun c ->
@@ -229,7 +251,8 @@ module AnalyseurLexicale =
         +| (terminal '>' +> terminal '=' +> return TGeq)
         +| (terminal '<' +> terminal '=' +> return TLeq)
         +| (anyterminal ++> fun c -> return (create_token (string_of_list (fun () -> (Cons(c, (fun () -> Nil)))))))
-    
+
+    (* Affiche la liste des token comme un string *)
   let rec print_token_list = fun list ->
     match list() with
     | Cons(t, suite) -> print_token t; print_token_list suite
@@ -237,7 +260,7 @@ module AnalyseurLexicale =
 
   exception NotEntValue of string
 
-
+  (* Parse les char "vide" *)
   let p_espace : char analist = terminal ' ' +| terminal '\n' +| terminal '\t'
   let rec p_espaces : char analist = fun l -> l |>
                                                 p_espace +> p_espaces +| epsilon
@@ -245,12 +268,14 @@ module AnalyseurLexicale =
   let next_token : (token, char) ranalist =
     p_espaces +> p_token
 
+  (* Parse la mylist entière pour genérer tout les tokens *)
   let rec p_tokens : (token mylist, char) ranalist = fun l ->
     l |>
       (next_token ++> fun t -> p_tokens ++> fun lt -> return (fun () -> Cons(t, lt)))
       +| return (fun () -> Nil)
 
 
+  (* Effectue l'analyse lexicale *)
   exception Echec_lex
   let analex s =
     let t, l = p_tokens (list_of_string s) in

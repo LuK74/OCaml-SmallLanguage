@@ -7,9 +7,14 @@ open State
 
 module ArithExp :
 sig
-  type aExp
   
+  (* Expression arithmétique *)
+  type aExp
+
+  (* Affiche une expression arithmétique *)
   val printAExp : aExp
+
+  (* Evalue une expression arithmétique *)
   val evalAExp : aExp -> int
   
 end

@@ -13,8 +13,10 @@ module Bo = BoolExp
 module Natural =
   struct
 
-    exception InstrNotAssign    
-     let exec_affec = fun instr ->
+    exception InstrNotAssign
+    (* Exec_affec a été passé dans Config car le laisser dans State créer des
+       dépendances mutuelles entre State ArithExp et BoolExp *)
+    let exec_affec = fun instr ->
       fun s ->
       match instr with
       | A.Assign(c,ope) -> (match ope with
@@ -36,7 +38,13 @@ module Natural =
       | _ -> raise InstrNotAssign
 
      exception StepError of S.state
-     
+
+     (* Simplifie l'evaluation d'une expression en tant que condition 
+        Si l'evaluation de l'expression donne un entier :
+          - Si l'entier est nulle, on renvoie faux
+          - Si l'entier est non nulle, on renvoie true
+        Si l'evalutation de l'expression donne un booléen on renvoie
+        juste le booléen *)
      let evalResBExp = fun exp ->
        fun s1 ->
       match exp with
@@ -52,8 +60,9 @@ module Natural =
       | A.Hash -> raise (StepError s1)
       | _ -> raise (StepError s1)
 
-    exception ExecError of S.state
-    let rec execute_aux = fun i1 ->
+     exception ExecError of S.state
+     (* Execute le programme dans son intégralité *)
+     let rec execute_aux = fun i1 ->
       fun s1 ->
       try (
         match i1 with
@@ -73,7 +82,7 @@ module Natural =
         | _ -> (raise (ExecError s1)))
       with S.VarNotFound(ch, st) -> print_string "Looking for "; print_string ch; print_string " on state : "; S.print_state st; (raise (ExecError st))
 
-
+     (* Lances execute_aux *)
     let execute = fun i1 ->
       print_string "Execution is starting\n";
       let res = execute_aux i1 (S.create_state) in
@@ -83,6 +92,7 @@ module Natural =
 
 module N = Natural
 
+(* Fonction pour automatisé des test de programme *)
 let automatedTest = fun s ->
   print_string "\n-------------------------------------\n";
   print_string "\nExecution starts \n";
