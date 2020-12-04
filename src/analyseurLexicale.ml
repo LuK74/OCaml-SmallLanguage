@@ -159,6 +159,7 @@ module AnalyseurLexicale =
     | TDivide
     | TModulo
     | THash
+    | TParallele
     | ValueENT of int
     | ValueFLOAT of float
     | ValueBOOL of bool
@@ -190,7 +191,8 @@ module AnalyseurLexicale =
     | TMultiply -> print_string "*" 
     | TDivide -> print_string "/" 
     | TModulo -> print_string "%" 
-    | THash -> print_string "#" 
+    | THash -> print_string "#"
+    | TParallele -> print_string "//"
     | ValueENT(k) -> print_int k
     | ValueFLOAT(k) -> print_float k
     | ValueBOOL(k) -> print_string (if (k = true) then "true" else "false")
@@ -226,6 +228,7 @@ module AnalyseurLexicale =
     | "/" -> TDivide
     | "%" -> TModulo
     | "#" -> THash
+    | "//" -> TParallele
     | "true" -> ValueBOOL(true)
     | "false" -> ValueBOOL(false)
     | "True" -> ValueBOOL(true)
@@ -250,6 +253,7 @@ module AnalyseurLexicale =
         +| (terminal '&' +> terminal '&' +> return TAnd)
         +| (terminal '>' +> terminal '=' +> return TGeq)
         +| (terminal '<' +> terminal '=' +> return TLeq)
+        +| (terminal '/' +> terminal '/' +> return TParallele)
         +| (anyterminal ++> fun c -> return (create_token (string_of_list (fun () -> (Cons(c, (fun () -> Nil)))))))
 
     (* Affiche la liste des token comme un string *)

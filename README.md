@@ -2,17 +2,12 @@
 
 ## Team
 CHALOYARD Lucas   
-HERQUE Eric   
-VACHERIAS Guillaume   
 
 ## Project
 https://ltpf.gricad-pages.univ-grenoble-alpes.fr/commun/projet/sos.pdf
 
-## Overleaf
-https://www.overleaf.com/4185181216ykhccbpvsvvx
-
 ## Our language
-[NEED TO BE REVIEWED] : Config, is it better to use two types, Inter and Final or just one type is enough ? 
+[NEED TO BE REVIEWED] : ArithExp & BoolExp grammar, and syntax analysis.
 
 
 - Affectation :   
@@ -49,7 +44,12 @@ Id will be equal to -1 (1 + 2 * (-1) --> 1 + (-2) --> -1)
 Example : 1 + 2 * 3 - 4 ========> (1 + ((2 * 3) - 4))   
 But now operations priorities are respected.
 
-
+[UPDATE] :
+- '//' :
+```c
+    a := 0 // a := 1
+```
+This operator simulate an concurrent execution (those instructions will be executed in a random order).
 ## How to use
 To compile :  
 ```bash

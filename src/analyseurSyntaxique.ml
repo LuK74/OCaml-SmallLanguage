@@ -15,6 +15,7 @@ module AnalyseurSyntaxique =
     (* Utilisé pour représenter une instruction *)
     type instr = Assign of var * exp
                | If of exp * instr * instr
+               | Parallele of instr * instr
                | While of exp * instr
                | Seq of instr * instr
                | Skip
@@ -39,6 +40,7 @@ module AnalyseurSyntaxique =
       | If(bexp, i1, i2) -> print_string " if("; print_exp bexp; print_string ") \n"
       | While(bexp, i1) -> print_string " while("; print_exp bexp; print_string ") \n"
       | Seq(i1, i2) -> print_instr i1
+      | Parallele(i1, i2) -> print_instr i1; print_string " // "; print_instr i2
 
     exception Echec of string * (AL.token AL.mylist)
 
@@ -199,19 +201,29 @@ module AnalyseurSyntaxique =
           (return (EmptyExp))
 
 
-        (* --------------------------------------------------------------- ---------------------------------------------------------- *)
+    (* --------------------------------------------------------------- ---------------------------------------------------------- *)
 
     
 
     (* Grammaire principale de notre langage *)
     let rec p_S : (instr, AL.token) ranalist = fun l ->
       l |>
-        (p_I ++> fun a -> p_L ++> fun b -> return (Seq(a,b)))
+        (p_I ++> fun a -> p_P ++> fun b -> return (Parallele(a,b)))
+        +|
+          (p_I ++> fun a -> p_L ++> fun b -> return (Seq(a,b)))
         +| return Skip
     and p_L : (instr, AL.token) ranalist = fun l ->
       l |>
         (terminal AL.TPointVir +> p_S ++> fun a -> return(a))
-        +| return Skip
+        +|
+          (return Skip)    
+    and p_P : (instr, AL.token) ranalist = fun l ->
+      l |>
+        (terminal AL.TParallele +> p_S ++> fun a -> return (a))
+    (*+|
+          (return Skip)*) (* Etant donné que p_P posséde la régle "epsilon", et qu'il est 
+                                positionné après p_L dans les régles de p_S
+                                Il génerera le Skip si p_S représente juste une instruction *)  
     and p_I : (instr, AL.token) ranalist = fun l ->
       l |>
         (terminal AL.TIf +> terminal AL.TParouv +> p_T ++>

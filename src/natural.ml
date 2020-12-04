@@ -72,13 +72,16 @@ module Natural =
                            execute_aux i2 res)
         | A.While(expB, i1) when (evalResBExp expB s1 = true) ->
            (let res = execute_aux i1 s1 in
-            execute_aux (While (expB, i1)) res)
+            execute_aux (A.While (expB, i1)) res)
         | A.While(expB, i1) when (evalResBExp expB s1 = false) ->
            s1
         | A.If(expB, i1, i2) when (evalResBExp expB s1 = true) ->
            execute_aux i1 s1
         | A.If(expB, i1, i2) when (evalResBExp expB s1 = false) ->
            execute_aux i2 s1
+        | A.Parallele(i1, i2) -> let random = Random.int 2 in
+                                 (if (random == 0) then (execute_aux (A.Seq(i1,i2)) s1)
+                                  else (execute_aux (A.Seq (i1, i2)) s1))
         | _ -> (raise (ExecError s1)))
       with S.VarNotFound(ch, st) -> print_string "Looking for "; print_string ch; print_string " on state : "; S.print_state st; (raise (ExecError st))
 
@@ -91,6 +94,15 @@ module Natural =
   end
 
 module N = Natural
+
+
+let _ =  print_string "Would you like to use your personnal seed for random generation ?\n";
+         print_string "(Seed) [If you enter 0, we'll use our own seed, or -1 for a random one] : ";
+         let seed = read_int() in
+         print_string "\nSeed used : ";
+         (if (seed = 0) then ((Random.init(7121999));print_string "7121999 \n\n")
+          else (if (seed = -1) then (Random.self_init(); print_string "Random seed \n\n")
+                else (Random.init seed; print_int seed; print_string "\n\n")))
 
 (* Fonction pour automatisé des test de programme *)
 let automatedTest = fun s ->

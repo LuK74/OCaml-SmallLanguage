@@ -71,7 +71,10 @@ module Config =
                                            | VBool(k) -> if (k = true) then Inter(i1,s1) else Inter(i2,s1)
                                            | VEnt(k) -> if (k = 0) then Inter(i2, s1) else Inter(i1, s1)
                                            | _ -> raise (StepError s1))
-                            | _ -> raise (StepError s1)))
+                            | _ -> raise (StepError s1))
+      | A.Parallele(i1, i2) -> let random = Random.int 2 in
+                               (if (random == 0) then Inter(A.Seq(i1,i2), s1)
+                                else Inter(A.Seq(i2, i1), s1)))
     with S.VarNotFound(s1, st) -> print_string "Looking for "; print_string s1; print_string " but not found"; (raise (StepError st))
 
     (* Fonction qui executera les instructions et qui fournit les options de
@@ -134,13 +137,25 @@ end
 
 module C = Config
 
-
+(* Lancement du programme de test
+   2 modes disponibles :
+   - Test automatisé 
+   - Execution interactive
+   Voir leur description dans le README.md
+   Possibilité d'utiliser une Seed personnalisé pour les Random du parallèlisme *)
 let _ =
+  print_string "Would you like to use your personnal seed for random generation ?\n";
+  print_string "(Seed) [If you enter 0, we'll use our own seed, or -1 for a random one] : ";
+  let seed = read_int() in
+  print_string "\nSeed used : ";
+  (if (seed = 0) then ((Random.init(7121999));print_string "7121999 \n\n")
+   else (if (seed = -1) then (Random.self_init(); print_string "Random seed \n\n")
+         else (Random.init seed; print_int seed; print_string "\n\n")));
   print_string "Two options available :\n";
   print_string "1 for Automated Tests\n";
   print_string "2 for Interactive Execution\n";
   print_string "Default option : AutomatedTests\n";
-  print_string "Option (1/2) :";
+  print_string "Option (1/2) : ";
   let userInput = read_line() in
   if (String.equal userInput "2") then C.interactive_exec_start()
   else ()
