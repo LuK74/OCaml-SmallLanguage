@@ -7,8 +7,8 @@ CHALOYARD Lucas
 https://ltpf.gricad-pages.univ-grenoble-alpes.fr/commun/projet/sos.pdf
 
 ## Our language
-[NEED TO BE REVIEWED] : ArithExp & BoolExp grammar, and syntax analysis.
-[NEED TO BE REVIEWED] : Project structure (usage of module, etc...)
+[NEED TO BE REVIEWED] : ArithExp & BoolExp grammar, and syntax analysis.      
+[NEED TO BE REVIEWED] : Project structure (usage of module, etc...).        
 
 
 - Affectation :   
@@ -50,7 +50,7 @@ But now operations priorities are respected.
 ```c
     a := 0 // a := 1
 ```
-This operator simulate an concurrent execution (those instructions will be executed in a random order).
+This operator simulate an concurrent execution (those instructions will be executed in a random order).    
 ## How to use
 To compile :  
 ```bash
@@ -62,10 +62,10 @@ To execute :
     bin/analyser
     bin/analyserN
 ```
-Analyser : Use Structural Operational Semantics
-AnalyserN : Use Natural Semantics
+Analyser : Use Structural Operational Semantics     
+AnalyserN : Use Natural Semantics      
 
-Test prog are in src/config.ml 
+Test prog are in src/config.ml         
 How to use "automatedTest" :  
 ```ocaml
     (* string corresponding to the prog *)
@@ -73,18 +73,18 @@ How to use "automatedTest" :
     (* just call automatedTest, it will return the final state, but also print it *)
     let _ = automatedTest str1
 ```
-At the end of every test, the number of step required is return. (While instructions count for 2, and Skip (end of sequence) count for 1 even if it doesn't do anything). This will be change later.
+At the end of every test, the number of step required is return. (While instructions count for 2, and Skip (end of sequence) count for 1 even if it doesn't do anything). This will be change later.        
 
-And how to use the debugger for "automatedTest" :
+And how to use the debugger for "automatedTest" :        
 ```
     (debug) next  #Execute one step
     (debug) print  #Print the current state (value of variables during execution)
     (debug) continue  #Continue until the end of the program
 ```
-How to use "Interactive Execution" :   
-During the time of the execution, you'll be allocated one state. Every instructions are applied on this state.   
-Instructions can be simple as : " id := 1 ", or a complete program like :   
-" a:=1;b:=1;if(b = a) { b := 2 } else { a := 2} "
+How to use "Interactive Execution" :        
+During the time of the execution, you'll be allocated one state. Every instructions are applied on this state.       
+Instructions can be simple as : " id := 1 ", or a complete program like :       
+" a:=1;b:=1;if(b = a) { b := 2 } else { a := 2} "       
 ```
     > [waiting for an instruction]
 ```
