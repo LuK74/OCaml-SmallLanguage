@@ -289,13 +289,4 @@ module AnalyseurLexicale =
 
   
 end
-(*
-module AL = AnalyseurLexicale
 
-let prog = "a:=1;b:=1;c:=1;d:=1;a:=b + d"
-let l1 = AL.list_of_string prog
-let t1 = AL.token_generator l1
-let _ = print_string "Token list : \n"
-let r1 = AL.print_token_list t1
-let _ = print_string "\n"
- *)
