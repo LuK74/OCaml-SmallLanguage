@@ -60,7 +60,10 @@ To compile :
 To execute :
 ```bash
     bin/analyser
+    bin/analyserN
 ```
+Analyser : Use Structural Operational Semantics
+AnalyserN : Use Natural Semantics
 
 Test prog are in src/config.ml 
 How to use "automatedTest" :  

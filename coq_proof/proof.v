@@ -656,7 +656,7 @@ Proof.
   induction i as [].
   - cbn. inversion h. reflexivity.
   - cbn. inversion h. reflexivity.
-  - 
+  - cbn. 
 Admitted.
 
 
