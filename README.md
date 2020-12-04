@@ -1,7 +1,8 @@
 # PROJET-LTPF
 
-## Team
-CHALOYARD Lucas   
+## CHALOYARD Lucas
+Email : lucas.chaloyard@etu.univ-grenoble-alpes.fr      
+N°etu : 11904079     
 
 ## Project
 https://ltpf.gricad-pages.univ-grenoble-alpes.fr/commun/projet/sos.pdf
