@@ -8,6 +8,7 @@ https://ltpf.gricad-pages.univ-grenoble-alpes.fr/commun/projet/sos.pdf
 
 ## Our language
 [NEED TO BE REVIEWED] : ArithExp & BoolExp grammar, and syntax analysis.
+[NEED TO BE REVIEWED] : Project structure (usage of module, etc...)
 
 
 - Affectation :   

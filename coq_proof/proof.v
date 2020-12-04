@@ -482,6 +482,8 @@ Qed.
 
 (** Énoncer et démontrer le théorème général pour Pcarre *)
 
+
+(* Theoreme sur les entiers pour prouver notre théorème général *)
 Lemma SSki_SkSi : forall i k, S (S (k + i)) = S (k + (S i)).
 Proof.
   intros i k.
@@ -521,6 +523,14 @@ Proof.
   - cbn. rewrite <- IHk. cbn. reflexivity.
 Qed.
 
+Theorem pred_Sn_n : forall n, eqnatb 0 n = false -> S (pred n) = n.
+Proof.
+  intros n h0.
+  induction n as [].
+  - cbn in h0. discriminate h0.
+  - cbn. reflexivity.
+Qed.
+
 Fixpoint SOS_Pcarre_n_general_aux i k {struct k} : SOS (Inter (Pcarre (i + k)) (invar_cc i)) (Inter (Pcarre (i + k)) (invar_cc (i + k))).
   refine(
       match k with
@@ -533,14 +543,6 @@ Fixpoint SOS_Pcarre_n_general_aux i k {struct k} : SOS (Inter (Pcarre (i + k)) (
     { rewrite <- plus_Snm_nSm. pose (H := SOS_Pcarre_n_general_aux (S i) k'). apply H. }
 Qed.
 
-Theorem pred_Sn_n : forall n, eqnatb 0 n = false -> S (pred n) = n.
-Proof.
-  intros n h0.
-  induction n as [].
-  - cbn in h0. discriminate h0.
-  - cbn. reflexivity.
-Qed.
-    
 (** Énoncer et démontrer le théorème général pour Pcarre *)
 Theorem SOS_Pcarre_n_general : forall n, SOS (Inter (Pcarre n) (invar_cc 0)) (Final (invar_cc n)).
 Proof.
@@ -591,6 +593,10 @@ Eval cbn in (f_SOS_1 PC0 [0;0;1]).
 Definition PC2 := Seq corps_carre PC0.
 Definition PC1 := If (Bnot (Beqnat Ir (Aco 2))) PC2 Skip.
 
+(** Ici on note toutes les étapes du 1er tour de Pcarre_2 grâce à notre "oracle"
+    et on vérifie que cela concorde bien.
+    Eval : Permet de "prédire" la prochaine étape
+    Et on déclare un Fact afin de vérifier que les résultats concordent **)
 (** On vérifie la progression *)
 Fact fa1 : f_SOS_1 PC0 [0;0;1] = Inter PC1 [0;0;1]. reflexivity. Qed.
 Eval cbn in (f_SOS_1 PC1 [0;0;1]).
