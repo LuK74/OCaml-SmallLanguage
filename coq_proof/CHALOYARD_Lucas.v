@@ -653,6 +653,7 @@ Qed.
 Lemma f_SOS_1_compl : forall i s c, SOS_1 i s c -> c = f_SOS_1 i s.
 Proof.
   intros i s c h.
+<<<<<<< HEAD
   induction h as []; cbn.
   - reflexivity.
   - reflexivity.
@@ -662,6 +663,13 @@ Proof.
   - rewrite H. reflexivity.
   - reflexivity.
 Qed.
+=======
+  induction i as [].
+  - cbn. inversion h. reflexivity.
+  - cbn. inversion h. reflexivity.
+  - cbn. 
+Admitted.
+>>>>>>> lucas.ope.rework
 
 
 

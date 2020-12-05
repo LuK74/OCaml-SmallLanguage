@@ -174,21 +174,8 @@ let automatedTest = fun s ->
   let state1 = C.execute res1 in
   state1
      
-
-(*let str0 = " if(c) 
-             {a:=1} 
-             else 
-             {b:=1} "
-let res0 = automatedTest str0*)
-
-(*let prog = "a := 100 ; b:= 2; c := 3; d := 4; if (a = 100) { b:=100; c:= 100 } else { while (c = 3) { if (b = 1) { c := 3 } else { b := b - 1 }}}"
-let res0 = automatedTest prog
-
-let str0 = " b1 := true; b2 := false; a:=1; b:=200; if(b1) { b:= b + a } else { a:= b + a }"
-let res0 = automatedTest str0
-
-let str1 = "a:=1; b:=1; c:=1;while(a){if(c){c:=0;a:=b}else{b:=0;c:=a}}"
-let res1 = automatedTest str1*)
+let str1 = "a:=1 // a := 0"
+let res1 = automatedTest str1
 
 let str2 = "a:=1;b:=1;c:=1;d:=1"
 let res2 = automatedTest str2

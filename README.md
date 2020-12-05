@@ -9,7 +9,8 @@ https://ltpf.gricad-pages.univ-grenoble-alpes.fr/commun/projet/sos.pdf
 
 ## Our language
 [NEED TO BE REVIEWED] : ArithExp & BoolExp grammar, and syntax analysis.      
-[NEED TO BE REVIEWED] : Project structure (usage of module, etc...).        
+[NEED TO BE REVIEWED] : Project structure (usage of module, etc...).     
+[NEED TO BE REVIEWED] : Extension 3.5 need to be reviewed (is it really what is asked to do ?)
 
 
 - Affectation :   
